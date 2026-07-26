@@ -1,6 +1,8 @@
 package com.example.InvestmentGoalManagementPlatform.Entities;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,5 +19,11 @@ public class InvestmentPlan extends BaseEntity {
     private Double monthlyInvestmentAmount;
     private Double expectedProfit;
     private String status;
+
+    @ManyToOne
+    private User user;
+    @OneToMany
+    private Investment investment;
+
 
 }

@@ -1,6 +1,7 @@
 package com.example.InvestmentGoalManagementPlatform.Entities;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +17,8 @@ public class Streak extends BaseEntity {
     private Integer currentStreak;
     private Integer longestStreak;
     private LocalDate lastCheckIn;
+
+    @ManyToOne
+    private User user;
 
 }
