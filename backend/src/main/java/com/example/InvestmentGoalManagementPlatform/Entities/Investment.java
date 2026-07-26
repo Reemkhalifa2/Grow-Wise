@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 public class Investment extends BaseEntity {
 
     private Double amountInvested;

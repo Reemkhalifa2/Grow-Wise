@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +25,7 @@ public class InvestmentPlan extends BaseEntity {
     @ManyToOne
     private User user;
     @OneToMany
-    private Investment investment;
+    private List<Investment> investment;
 
 
 }
