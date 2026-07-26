@@ -1,0 +1,21 @@
+package com.example.InvestmentGoalManagementPlatform.Entities;
+
+import jakarta.persistence.Entity;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+public class InvestmentPlan extends BaseEntity {
+
+    private Double targetAmount;
+    private Integer durationMonths;
+    private Double monthlySavingAmount;
+    private Double monthlyInvestmentAmount;
+    private Double expectedProfit;
+    private String status;
+
+}
