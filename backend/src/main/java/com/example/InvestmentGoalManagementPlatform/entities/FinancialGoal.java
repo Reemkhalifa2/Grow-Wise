@@ -1,8 +1,7 @@
-package com.example.InvestmentGoalManagementPlatform.Entities;
+package com.example.InvestmentGoalManagementPlatform.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

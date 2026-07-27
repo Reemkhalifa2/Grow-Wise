@@ -1,4 +1,4 @@
-package com.example.InvestmentGoalManagementPlatform.Utility;
+package com.example.InvestmentGoalManagementPlatform.utility;
 
 import java.time.LocalDate;
 import java.time.Period;

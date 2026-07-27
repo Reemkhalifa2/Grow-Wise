@@ -1,10 +1,10 @@
 package com.example.InvestmentGoalManagementPlatform.security;
-import com.example.InvestmentGoalManagementPlatform.Entities.User;
-import com.example.InvestmentGoalManagementPlatform.Repository.UserRepository;
+import com.example.InvestmentGoalManagementPlatform.entities.User;
+import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;

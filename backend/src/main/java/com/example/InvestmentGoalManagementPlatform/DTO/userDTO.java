@@ -1,7 +1,7 @@
 package com.example.InvestmentGoalManagementPlatform.DTO;
 
 
-import com.example.InvestmentGoalManagementPlatform.Entities.User;
+import com.example.InvestmentGoalManagementPlatform.entities.User;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

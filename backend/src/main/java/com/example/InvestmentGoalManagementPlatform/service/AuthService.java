@@ -1,11 +1,11 @@
-package com.example.InvestmentGoalManagementPlatform.Service;
+package com.example.InvestmentGoalManagementPlatform.service;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.AuthResponse;
 import com.example.InvestmentGoalManagementPlatform.DTO.LoginRequest;
 import com.example.InvestmentGoalManagementPlatform.DTO.RegisterRequest;
-import com.example.InvestmentGoalManagementPlatform.Entities.User;
-import com.example.InvestmentGoalManagementPlatform.Repository.UserRepository;
-import com.example.InvestmentGoalManagementPlatform.Utility.Role;
+import com.example.InvestmentGoalManagementPlatform.entities.User;
+import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
+import com.example.InvestmentGoalManagementPlatform.utility.Role;
 import com.example.InvestmentGoalManagementPlatform.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

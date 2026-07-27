@@ -1,11 +1,10 @@
-package com.example.InvestmentGoalManagementPlatform.Entities;
+package com.example.InvestmentGoalManagementPlatform.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
 
 import java.time.LocalDate;
 

@@ -1,11 +1,7 @@
-package com.example.InvestmentGoalManagementPlatform.Service;
+package com.example.InvestmentGoalManagementPlatform.service;
 
 
-import com.example.InvestmentGoalManagementPlatform.DTO.UserResponseDTO;
-import com.example.InvestmentGoalManagementPlatform.Entities.User;
-import com.example.InvestmentGoalManagementPlatform.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service

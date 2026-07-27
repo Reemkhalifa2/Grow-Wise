@@ -1,9 +1,8 @@
 package com.example.InvestmentGoalManagementPlatform.DTO;
 
-import com.example.InvestmentGoalManagementPlatform.Entities.Task;
+import com.example.InvestmentGoalManagementPlatform.entities.Task;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

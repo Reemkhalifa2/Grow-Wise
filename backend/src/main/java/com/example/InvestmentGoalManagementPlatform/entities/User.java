@@ -1,6 +1,6 @@
-package com.example.InvestmentGoalManagementPlatform.Entities;
+package com.example.InvestmentGoalManagementPlatform.entities;
 
-import com.example.InvestmentGoalManagementPlatform.Utility.Role;
+import com.example.InvestmentGoalManagementPlatform.utility.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

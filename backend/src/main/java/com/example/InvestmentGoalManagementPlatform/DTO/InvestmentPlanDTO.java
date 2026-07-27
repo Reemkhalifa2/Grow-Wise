@@ -1,6 +1,6 @@
 package com.example.InvestmentGoalManagementPlatform.DTO;
 
-import com.example.InvestmentGoalManagementPlatform.Entities.InvestmentPlan;
+import com.example.InvestmentGoalManagementPlatform.entities.InvestmentPlan;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

@@ -3,7 +3,7 @@ package com.example.InvestmentGoalManagementPlatform.controller;
 import com.example.InvestmentGoalManagementPlatform.DTO.AuthResponse;
 import com.example.InvestmentGoalManagementPlatform.DTO.LoginRequest;
 import com.example.InvestmentGoalManagementPlatform.DTO.RegisterRequest;
-import com.example.InvestmentGoalManagementPlatform.Service.AuthService;
+import com.example.InvestmentGoalManagementPlatform.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
