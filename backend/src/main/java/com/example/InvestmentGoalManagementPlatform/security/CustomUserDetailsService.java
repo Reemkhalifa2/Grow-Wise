@@ -1,5 +1,5 @@
 package com.example.InvestmentGoalManagementPlatform.security;
-import com.example.InvestmentGoalManagementPlatform.entities.User;
+import com.example.InvestmentGoalManagementPlatform.entity.User;
 import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -1,4 +1,4 @@
-package com.example.InvestmentGoalManagementPlatform.entities;
+package com.example.InvestmentGoalManagementPlatform.entity;
 
 import com.example.InvestmentGoalManagementPlatform.utility.Role;
 import jakarta.persistence.*;

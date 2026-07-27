@@ -1,4 +1,4 @@
-package com.example.InvestmentGoalManagementPlatform.entities;
+package com.example.InvestmentGoalManagementPlatform.entity;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

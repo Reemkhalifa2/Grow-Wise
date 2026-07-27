@@ -1,4 +1,4 @@
-package com.example.InvestmentGoalManagementPlatform.entities;
+package com.example.InvestmentGoalManagementPlatform.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
@@ -12,16 +12,13 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Task extends BaseEntity {
+public class Streak extends BaseEntity {
 
-    private String title;
-    private String description;
-    private LocalDate dueDate;
-    private Boolean completed;
+    private Integer currentStreak;
+    private Integer longestStreak;
+    private LocalDate lastCheckIn;
 
     @ManyToOne
     private User user;
-
-
 
 }

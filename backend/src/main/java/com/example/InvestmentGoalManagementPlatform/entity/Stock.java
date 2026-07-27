@@ -1,4 +1,4 @@
-package com.example.InvestmentGoalManagementPlatform.entities;
+package com.example.InvestmentGoalManagementPlatform.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
