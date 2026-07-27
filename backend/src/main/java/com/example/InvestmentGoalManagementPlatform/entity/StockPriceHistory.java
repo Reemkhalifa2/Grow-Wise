@@ -14,9 +14,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class StockPriceHistory extends BaseEntity {
     private Integer price;
-    private LocalDateTime recordedDate;
+    private LocalDateTime recordedAt;
 
     @ManyToOne
     private Stock stock;
+    @ManyToOne
+    private Asset asset;
 
 }
