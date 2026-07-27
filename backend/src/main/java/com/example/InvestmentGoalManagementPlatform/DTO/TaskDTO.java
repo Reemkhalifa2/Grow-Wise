@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -26,7 +27,7 @@ public class TaskDTO {
 
     private Integer userId;
 
-
+    // Convert DTO to Entity
     public Task toEntity() {
         Task task = new Task();
 
@@ -38,24 +39,32 @@ public class TaskDTO {
         return task;
     }
 
-
+    // Update existing Entity
     public void applyTo(Task task) {
         task.setTitle(title);
         task.setDescription(description);
         task.setDueDate(dueDate);
         task.setCompleted(completed);
     }
+
     public static TaskDTO fromEntity(Task task) {
         TaskDTO dto = new TaskDTO();
 
-        //dto.setId(task.getId());//
-        dto.setUserId(task.getUser().getId());
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
         dto.setDueDate(task.getDueDate());
         dto.setCompleted(task.getCompleted());
 
+        if (task.getUser() != null) {
+            dto.setUserId(task.getUser().getId());
+        }
+
         return dto;
     }
 
+    public static List<TaskDTO> fromEntity(List<Task> tasks) {
+        return tasks.stream()
+                .map(TaskDTO::fromEntity)
+                .toList();
+    }
 }

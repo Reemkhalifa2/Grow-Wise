@@ -1,4 +1,4 @@
-package com.example.InvestmentGoalManagementPlatform.Repositories;
+package com.example.InvestmentGoalManagementPlatform.Repository;
 
 
 import com.example.InvestmentGoalManagementPlatform.Entities.Task;
