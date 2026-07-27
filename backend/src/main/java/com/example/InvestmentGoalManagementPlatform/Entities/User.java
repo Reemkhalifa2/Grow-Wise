@@ -1,9 +1,7 @@
 package com.example.InvestmentGoalManagementPlatform.Entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import com.example.InvestmentGoalManagementPlatform.Utility.Role;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +19,9 @@ public class User extends BaseEntity {
     private String password;
     private Integer monthlySalary;
     private Integer monthlyExpenses;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
     @OneToMany
     private List<Task> tasks;
     @OneToMany
@@ -29,6 +30,7 @@ public class User extends BaseEntity {
     private List<FinancialGoal> financialGoals;
     @OneToMany
     private List<Streak> streaks;
+
 
 
 
