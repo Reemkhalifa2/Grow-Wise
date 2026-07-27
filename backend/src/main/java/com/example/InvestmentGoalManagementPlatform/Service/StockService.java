@@ -1,8 +1,8 @@
-package com.example.InvestmentGoalManagementPlatform.Service;
+package com.example.InvestmentGoalManagementPlatform.service;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.StockDTO;
-import com.example.InvestmentGoalManagementPlatform.Entities.Stock;
-import com.example.InvestmentGoalManagementPlatform.Repository.StockRepository;
+import com.example.InvestmentGoalManagementPlatform.entity.Stock;
+import com.example.InvestmentGoalManagementPlatform.repository.StockRepository;
 import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

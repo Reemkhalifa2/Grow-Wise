@@ -1,14 +1,14 @@
-package com.example.InvestmentGoalManagementPlatform.Service;
+package com.example.InvestmentGoalManagementPlatform.service;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentDTO;
-import com.example.InvestmentGoalManagementPlatform.Entities.Investment;
-import com.example.InvestmentGoalManagementPlatform.Entities.InvestmentPlan;
-import com.example.InvestmentGoalManagementPlatform.Entities.Stock;
-import com.example.InvestmentGoalManagementPlatform.Entities.User;
-import com.example.InvestmentGoalManagementPlatform.Repository.InvestmentPlanRepository;
-import com.example.InvestmentGoalManagementPlatform.Repository.InvestmentRepository;
-import com.example.InvestmentGoalManagementPlatform.Repository.StockRepository;
-import com.example.InvestmentGoalManagementPlatform.Repository.UserRepository;
+import com.example.InvestmentGoalManagementPlatform.entity.Investment;
+import com.example.InvestmentGoalManagementPlatform.entity.InvestmentPlan;
+import com.example.InvestmentGoalManagementPlatform.entity.Stock;
+import com.example.InvestmentGoalManagementPlatform.entity.User;
+import com.example.InvestmentGoalManagementPlatform.repository.InvestmentPlanRepository;
+import com.example.InvestmentGoalManagementPlatform.repository.InvestmentRepository;
+import com.example.InvestmentGoalManagementPlatform.repository.StockRepository;
+import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

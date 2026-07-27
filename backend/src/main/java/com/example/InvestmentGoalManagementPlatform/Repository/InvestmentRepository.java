@@ -1,7 +1,7 @@
-package com.example.InvestmentGoalManagementPlatform.Repository;
+package com.example.InvestmentGoalManagementPlatform.repository;
 
-import com.example.InvestmentGoalManagementPlatform.Entities.Investment;
-import com.example.InvestmentGoalManagementPlatform.Entities.InvestmentPlan;
+import com.example.InvestmentGoalManagementPlatform.entity.Investment;
+import com.example.InvestmentGoalManagementPlatform.entity.InvestmentPlan;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
