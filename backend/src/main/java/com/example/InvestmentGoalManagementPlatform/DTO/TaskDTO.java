@@ -3,7 +3,6 @@ package com.example.InvestmentGoalManagementPlatform.DTO;
 import com.example.InvestmentGoalManagementPlatform.Entities.Task;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -46,4 +45,17 @@ public class TaskDTO {
         task.setDueDate(dueDate);
         task.setCompleted(completed);
     }
+    public static TaskDTO fromEntity(Task task) {
+        TaskDTO dto = new TaskDTO();
+
+        //dto.setId(task.getId());//
+        dto.setUserId(task.getUser().getId());
+        dto.setTitle(task.getTitle());
+        dto.setDescription(task.getDescription());
+        dto.setDueDate(task.getDueDate());
+        dto.setCompleted(task.getCompleted());
+
+        return dto;
+    }
+
 }
