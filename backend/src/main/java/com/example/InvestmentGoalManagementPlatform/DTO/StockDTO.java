@@ -9,11 +9,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class StockDTO {
+
+    private Integer id; // response-only, ignored on create/update requests
 
     @NotBlank(message = "Company name is required")
     private String companyName;
@@ -49,5 +53,26 @@ public class StockDTO {
         stock.setCurrentPrice(currentPrice);
         stock.setDailyChange(dailyChange);
         stock.setLastUpdated(lastUpdated);
+    }
+
+    public static StockDTO fromEntity(Stock stock) {
+        StockDTO dto = new StockDTO();
+
+        dto.setId(stock.getId());
+        dto.setCompanyName(stock.getCompanyName());
+        dto.setTickerSymbol(stock.getTickerSymbol());
+        dto.setCurrentPrice(stock.getCurrentPrice());
+        dto.setDailyChange(stock.getDailyChange());
+        dto.setLastUpdated(stock.getLastUpdated());
+
+        return dto;
+    }
+
+    public static List<StockDTO> fromEntity(List<Stock> stocks) {
+        List<StockDTO> stockDTOList = new ArrayList<>();
+        for (Stock stock : stocks) {
+            stockDTOList.add(fromEntity(stock));
+        }
+        return stockDTOList;
     }
 }

@@ -9,11 +9,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvestmentDTO {
+
+    private Integer id; // response-only, ignored on create/update requests
 
     @NotNull(message = "Amount invested is required")
     @Min(value = 0, message = "Amount invested cannot be negative")
@@ -40,7 +44,11 @@ public class InvestmentDTO {
     @NotNull(message = "Stock ID is required")
     private Integer stockId;
 
-    public Investment toEntity() {
+    private String stockTickerSymbol;
+    private Double currentValue;
+    private Double profitOrLoss;
+
+    public Investment toEntity() { // For Creating
         Investment investment = new Investment();
 
         investment.setAmountInvested(amountInvested);
@@ -51,11 +59,38 @@ public class InvestmentDTO {
         return investment;
     }
 
-    public void applyTo(Investment investment) {
+    public void applyTo(Investment investment) { // For Updating
         investment.setAmountInvested(amountInvested);
         investment.setQuantity(quantity);
         investment.setPurchasePrice(purchasePrice);
         investment.setPurchaseDate(purchaseDate);
     }
-}
 
+    public static InvestmentDTO fromEntity(Investment investment) {
+        InvestmentDTO dto = new InvestmentDTO();
+
+        dto.setId(investment.getId());
+        dto.setAmountInvested(investment.getAmountInvested());
+        dto.setQuantity(investment.getQuantity());
+        dto.setPurchasePrice(investment.getPurchasePrice());
+        dto.setPurchaseDate(investment.getPurchaseDate());
+        dto.setUserId(investment.getUser().getId());
+        dto.setPlanId(investment.getInvestmentPlan().getId());
+        dto.setStockId(investment.getStock().getId());
+        dto.setStockTickerSymbol(investment.getStock().getTickerSymbol());
+
+        Double currentValue = investment.getStock().getCurrentPrice() * investment.getQuantity();
+        dto.setCurrentValue(currentValue);
+        dto.setProfitOrLoss(currentValue - investment.getAmountInvested());
+
+        return dto;
+    }
+
+    public static List<InvestmentDTO> fromEntity(List<Investment> investments) {
+        List<InvestmentDTO> investmentDTOList = new ArrayList<>();
+        for (Investment investment : investments) {
+            investmentDTOList.add(fromEntity(investment));
+        }
+        return investmentDTOList;
+    }
+}

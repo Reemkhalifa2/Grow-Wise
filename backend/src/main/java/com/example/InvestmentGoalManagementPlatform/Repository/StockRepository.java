@@ -1,0 +1,24 @@
+package com.example.InvestmentGoalManagementPlatform.Repository;
+
+import com.example.InvestmentGoalManagementPlatform.Entities.Investment;
+import com.example.InvestmentGoalManagementPlatform.Entities.Stock;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface StockRepository extends JpaRepository<Stock, Integer> {
+
+    @Query("SELECT s FROM Stock s " + "WHERE s.isActive = true")
+    List<Stock> findAllActive();
+
+    @Query("SELECT s FROM Stock s " + "WHERE s.tickerSymbol = :tickerSymbol AND s.isActive = true")
+    Stock findByTickerSymbol(@Param("tickerSymbol") String tickerSymbol);
+
+    @Query("SELECT s FROM Stock s " + "WHERE LOWER(s.companyName) LIKE LOWER(CONCAT('%', :name, '%')) AND s.isActive = true")
+    List<Stock> searchByCompanyName(@Param("name") String name);
+}
+
