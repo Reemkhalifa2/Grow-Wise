@@ -6,7 +6,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
 
-public class HelperUtilities {
+public class HelperUtility{
     public static double calculateProgressPercentage(double currentAmount, double targetAmount) {
         if (targetAmount <= 0) {
             return 0;
@@ -66,8 +66,9 @@ public class HelperUtilities {
     }
 
     public static boolean isNotNull(Object obj) {
-        return obj != null;
+        return obj != null ;
     }
+
 
     public static boolean isNotNull(String str) {
         return str != null && !str.trim().isEmpty();

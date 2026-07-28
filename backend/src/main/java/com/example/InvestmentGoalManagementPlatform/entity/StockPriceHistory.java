@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StockPriceHistory extends BaseEntity {
-    private Integer price;
+    private Double price;
     private LocalDateTime recordedAt;
 
     @ManyToOne
