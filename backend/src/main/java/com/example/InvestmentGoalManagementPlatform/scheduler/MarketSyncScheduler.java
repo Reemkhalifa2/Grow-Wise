@@ -2,49 +2,53 @@ package com.example.InvestmentGoalManagementPlatform.scheduler;
 
 import com.example.InvestmentGoalManagementPlatform.entity.Asset;
 import com.example.InvestmentGoalManagementPlatform.entity.StockPriceHistory;
-import com.example.InvestmentGoalManagementPlatform.exception.ScrapingException;
 import com.example.InvestmentGoalManagementPlatform.repository.AssetRepository;
+import com.example.InvestmentGoalManagementPlatform.repository.StockPriceHistoryRepository;
 import com.example.InvestmentGoalManagementPlatform.service.PriceScrapingService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
-public class AssetPriceUpdateScheduler {
+public class MarketSyncScheduler {
 
     private final AssetRepository assetRepository;
     private final PriceScrapingService priceScrapingService;
+    private final StockPriceHistoryRepository historyRepository;
 
-    // Every 15 minutes by default - tune via application.yml as needed.
-    @Scheduled(fixedRateString = "${asset.price-update.interval-ms:900000}")
+    // Runs automatically every 25 minutes (1,500,000 ms)
+    @Scheduled(fixedRateString = "${asset.sync.interval-ms:1500000}")
     @Transactional
-    public void refreshAutoUpdateAssets() {
-        List<Asset> assets = assetRepository.findByAutoUpdateTrueAndScrapingUrlIsNotNull();
-        log.info("Starting scheduled price refresh for {} asset(s)", assets.size());
+    public void executeTwentyFiveMinPriceSync() {
+        List<Asset> activeAssets = assetRepository.findByAutoUpdateTrueAndIsActiveTrueAndScrapingUrlIsNotNull();
+        log.info("Starting 25-minute price update for {} active asset(s)...", activeAssets.size());
 
-        for (Asset asset : assets) {
+        for (Asset asset : activeAssets) {
             try {
-                Double newPrice = priceScrapingService.scrapePrice(asset);
-                asset.setCurrentPrice(newPrice);
+                Double freshPrice = priceScrapingService.scrapePrice(asset);
 
-                StockPriceHistory history = new StockPriceHistory();
-                history.setAsset(asset);
-                history.setPrice(newPrice);
-                history.setRecordedAt(LocalDateTime.now());
-                asset.getPriceHistories().add(history);
+                if (freshPrice != null && freshPrice > 0) {
+                    asset.setCurrentPrice(freshPrice);
+                    assetRepository.save(asset);
 
-                assetRepository.save(asset);
-                log.info("Updated {} ({}) -> {}", asset.getSymbol(), asset.getAssetType(), newPrice);
-            } catch (ScrapingException e) {
-                // One failing asset should never abort the whole batch.
-                log.warn("Skipped price update for {}: {}", asset.getSymbol(), e.getMessage());
+                    // Record price history
+                    StockPriceHistory history = new StockPriceHistory();
+                    history.setAsset(asset);
+                    history.setPrice(freshPrice);
+                    history.setRecordedAt(LocalDateTime.now());
+                    historyRepository.save(history);
+
+                    log.info("Successfully updated [{}] price -> OMR {}", asset.getSymbol(), freshPrice);
+                }
+            } catch (Exception e) {
+                log.warn("Skipped updating [{}] due to error: {}", asset.getSymbol(), e.getMessage());
             }
         }
     }

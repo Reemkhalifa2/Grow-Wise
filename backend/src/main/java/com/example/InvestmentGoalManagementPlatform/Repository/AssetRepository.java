@@ -23,5 +23,5 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
      * Used by the scheduled scraping job to find only the assets that
      * need their price refreshed and have a valid scraping configuration.
      */
-    List<Asset> findByAutoUpdateTrueAndScrapingUrlIsNotNull();
+    List<Asset> findByAutoUpdateTrueAndIsActiveTrueAndScrapingUrlIsNotNull();
 }
