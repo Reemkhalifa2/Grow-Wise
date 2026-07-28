@@ -1,6 +1,9 @@
 package com.example.InvestmentGoalManagementPlatform.repository;
 
+<<<<<<< HEAD:backend/src/main/java/com/example/InvestmentGoalManagementPlatform/Repository/StockRepository.java
 import com.example.InvestmentGoalManagementPlatform.entity.Investment;
+=======
+>>>>>>> 2521977 (create FinancialGoalService):backend/src/main/java/com/example/InvestmentGoalManagementPlatform/repository/StockRepository.java
 import com.example.InvestmentGoalManagementPlatform.entity.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
