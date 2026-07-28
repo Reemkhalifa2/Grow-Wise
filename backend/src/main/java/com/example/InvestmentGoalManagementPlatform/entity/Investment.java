@@ -25,5 +25,8 @@ public class Investment extends BaseEntity {
     private InvestmentPlan investmentPlan;
     @ManyToOne
     private Stock stock;
+    @ManyToOne
+    private Asset asset;
+
 
 }
