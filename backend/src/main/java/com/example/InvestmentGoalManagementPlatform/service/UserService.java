@@ -10,12 +10,14 @@ import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundEx
 import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    @Autowired
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
