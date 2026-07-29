@@ -6,6 +6,7 @@ import com.example.InvestmentGoalManagementPlatform.entity.User;
 import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
 import com.example.InvestmentGoalManagementPlatform.repository.FinancialGoalRepository;
 import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
+import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +24,12 @@ public class FinancialGoalService {
     }
 
     public FinancialGoalDTO createFinancialGoal(FinancialGoalDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByUserId(dto.getUserId());
+        if (HelperUtility.isNull(user)) {
+            throw new ResourceNotFoundException(
+                    "User not found"
+            );
+        }
 
         FinancialGoal financialGoal = dto.toEntity();
         financialGoal.setUser(user);

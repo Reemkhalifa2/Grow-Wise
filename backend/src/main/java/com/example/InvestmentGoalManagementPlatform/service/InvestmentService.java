@@ -10,6 +10,7 @@ import com.example.InvestmentGoalManagementPlatform.repository.InvestmentReposit
 import com.example.InvestmentGoalManagementPlatform.repository.StockRepository;
 import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
+import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +35,12 @@ public class InvestmentService {
     }
 
     public InvestmentDTO createInvestment(InvestmentDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByUserId(dto.getUserId());
+        if (HelperUtility.isNull(user)) {
+            throw new ResourceNotFoundException(
+                    "User not found"
+            );
+        }
 
         InvestmentPlan investmentPlan = investmentPlanRepository.findById(dto.getPlanId())
                 .orElseThrow(() -> new ResourceNotFoundException("Investment plan not found"));
