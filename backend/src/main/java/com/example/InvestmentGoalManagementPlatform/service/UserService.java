@@ -1,62 +1,53 @@
 package com.example.InvestmentGoalManagementPlatform.service;
 
 
+import com.example.InvestmentGoalManagementPlatform.DTO.UserResponseDTO;
+import com.example.InvestmentGoalManagementPlatform.DTO.UserUpdateDTO;
+import com.example.InvestmentGoalManagementPlatform.entity.User;
+import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
+import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
+import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Helper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
-/*
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserResponseDTO getUserProfile(Long userId) {
+    public UserResponseDTO getUserProfile(Integer userId) {
         User user = findUserById(userId);
-        return user(user);
+        return UserResponseDTO.fromEntity(user);
     }
 
-    public UserResponseDTO updateProfile(Long userId, UserUpdateDTO dto) {
+    public UserResponseDTO updateProfile(Integer userId, UserUpdateDTO dto) {
         User user = findUserById(userId);
 
-        if (dto.getFullName() != null) user.setFullName(dto.getFullName());
-        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
-        if (dto.getPhoneNumber() != null) user.setPhoneNumber(dto.getPhoneNumber());
-        if (dto.getMonthlyIncome() != null) user.setMonthlyIncome(dto.getMonthlyIncome());
-        if (dto.getMonthlyExpenses() != null) user.setMonthlyExpenses(dto.getMonthlyExpenses());
-        if (dto.getInvestmentPreference() != null) user.setInvestmentPreference(dto.getInvestmentPreference());
-
-        // Recalculate saving capacity if income/expenses changed
-        user.setSavingCapacity(user.getMonthlyIncome() - user.getMonthlyExpenses());
+        if (HelperUtility.isNotNull(dto.getFullName())) user.setFullName(dto.getFullName());
+        if (HelperUtility.isNotNull(dto.getEmail())) user.setEmail(dto.getEmail());
+        if (HelperUtility.isNotNull(dto.getMonthlySalary())) user.setMonthlySalary(dto.getMonthlySalary());
+        if (HelperUtility.isNotNull(dto.getMonthlyExpenses())) user.setMonthlyExpenses(dto.getMonthlyExpenses());
 
         User updated = userRepository.save(user);
-        return userMapper.toDto(updated);
+        return UserResponseDTO.fromEntity(updated);
     }
 
-    public void changePassword(Long userId, ChangePasswordDTO dto) {
-        User user = findUserById(userId);
 
-        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Current password is incorrect");
-        }
 
-        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
-            throw new PasswordMismatchException("New password and confirmation do not match");
-        }
-
-        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
-    }
-
-    public void deactivateAccount(Long userId) {
+    public void deactivateAccount(Integer userId) {
         User user = findUserById(userId);
         user.setIsActive(false);
         userRepository.save(user);
     }
 
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-    }*/
+    private User findUserById(Integer userId) {
+        User user = userRepository.findById(userId);
+        if(HelperUtility.isNull(user)){
+            throw new ResourceNotFoundException("User with this id not found");
+        }
+        return user;
+    }
 }
