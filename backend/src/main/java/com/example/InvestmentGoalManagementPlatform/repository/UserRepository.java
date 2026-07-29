@@ -9,7 +9,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.isActive = true")
     User findByEmail(@Param("email") String email);
     @Query("SELECT u FROM User u WHERE u.id = :id AND u.isActive = true")
-    User findById(@Param("id") Integer id);
+    User findByUserId(@Param("id") Integer id);
 
     boolean existsByEmail(String email);
 }

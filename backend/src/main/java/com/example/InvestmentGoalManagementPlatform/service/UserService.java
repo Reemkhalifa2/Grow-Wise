@@ -1,14 +1,15 @@
 package com.example.InvestmentGoalManagementPlatform.service;
 
 
+import com.example.InvestmentGoalManagementPlatform.DTO.ChangePasswordDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.UserResponseDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.UserUpdateDTO;
 import com.example.InvestmentGoalManagementPlatform.entity.User;
+import com.example.InvestmentGoalManagementPlatform.exception.InvalidCredentialsException;
 import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
 import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Helper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +36,20 @@ public class UserService {
         return UserResponseDTO.fromEntity(updated);
     }
 
+    public void changePassword(Integer userId, ChangePasswordDTO dto) {
+        User user = findUserById(userId);
 
+        if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("New password matches current password ");
+        }
+
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new InvalidCredentialsException("New password and confirmation do not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+    }
 
     public void deactivateAccount(Integer userId) {
         User user = findUserById(userId);
@@ -44,7 +58,7 @@ public class UserService {
     }
 
     private User findUserById(Integer userId) {
-        User user = userRepository.findById(userId);
+        User user = userRepository.findByUserId(userId);
         if(HelperUtility.isNull(user)){
             throw new ResourceNotFoundException("User with this id not found");
         }
