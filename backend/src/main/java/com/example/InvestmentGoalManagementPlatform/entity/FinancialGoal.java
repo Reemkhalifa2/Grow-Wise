@@ -1,5 +1,6 @@
 package com.example.InvestmentGoalManagementPlatform.entity;
 
+import com.example.InvestmentGoalManagementPlatform.utility.RiskLevel;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class FinancialGoal extends BaseEntity {
     private LocalDate targetDate;
     private String status;
     private Double progressPercentage;
+    private RiskLevel riskLevel;
 
     @ManyToOne
     private User user;
