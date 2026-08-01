@@ -1,6 +1,7 @@
 package com.example.InvestmentGoalManagementPlatform.DTO;
 
 import com.example.InvestmentGoalManagementPlatform.entity.FinancialGoal;
+import com.example.InvestmentGoalManagementPlatform.utility.RiskLevel;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -35,6 +36,7 @@ public class FinancialGoalDTO {
     private LocalDate targetDate;
 
     private String status;
+    private RiskLevel riskLevel;
 
     @NotNull(message = "User ID is required")
     private Integer userId;
@@ -49,6 +51,7 @@ public class FinancialGoalDTO {
         financialGoal.setCurrentAmount(currentAmount);
         financialGoal.setTargetDate(targetDate);
         financialGoal.setStatus(status);
+        financialGoal.setRiskLevel(riskLevel);
 
         return financialGoal;
     }
