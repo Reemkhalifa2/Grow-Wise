@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface AssetRepository extends JpaRepository<Asset, Long> {
+public interface AssetRepository extends JpaRepository<Asset, Integer> {
     Optional<Asset> findBySymbolAndIsActiveTrue(String symbol);
 
     List<Asset> findByAssetTypeAndIsActiveTrue(AssetType assetType);
-
+    List<Asset> findAllByIsActiveTrue();
     Optional<Asset> findBySymbolIgnoreCaseAndIsActiveTrue(String symbol);
 
     boolean existsBySymbolIgnoreCaseAndIsActiveTrue(String symbol);
