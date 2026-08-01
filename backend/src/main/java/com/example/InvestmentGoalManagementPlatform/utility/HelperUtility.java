@@ -3,10 +3,22 @@ package com.example.InvestmentGoalManagementPlatform.utility;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
 public class HelperUtility{
+
+    public static int calculateRemainingMonths(LocalDate targetDate) {
+        LocalDate today = LocalDate.now();
+
+        if (targetDate == null || !targetDate.isAfter(today)) {
+            return 0;
+        }
+
+        return (int) ChronoUnit.MONTHS.between(today.withDayOfMonth(1), targetDate.withDayOfMonth(1));
+    }
+
     public static double calculateProgressPercentage(double currentAmount, double targetAmount) {
         if (targetAmount <= 0) {
             return 0;
