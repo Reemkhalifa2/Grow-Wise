@@ -2,460 +2,1090 @@ package com.example.InvestmentGoalManagementPlatform.service;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanRequestDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanResponseDTO;
-import com.example.InvestmentGoalManagementPlatform.entity.Asset;
-import com.example.InvestmentGoalManagementPlatform.entity.FinancialGoal;
-import com.example.InvestmentGoalManagementPlatform.entity.StockPriceHistory;
-import com.example.InvestmentGoalManagementPlatform.repository.StockPriceHistoryRepository;
-import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
-import com.example.InvestmentGoalManagementPlatform.utility.RiskLevel;
-import com.example.InvestmentGoalManagementPlatform.repository.AssetRepository;
-import com.example.InvestmentGoalManagementPlatform.repository.FinancialGoalRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.example.InvestmentGoalManagementPlatform.entity.*;
+import com.example.InvestmentGoalManagementPlatform.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class InvestmentPlanService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InvestmentPlanService.class);
+
+    private static final double DEFAULT_ANNUAL_RETURN = 0.05;
+    private static final double MAX_REASONABLE_ANNUAL_RETURN = 0.50;
+    private static final double MIN_REASONABLE_ANNUAL_RETURN = -0.50;
+    private static final int MINIMUM_DIVERSIFIED_ASSETS = 2;
 
     private final FinancialGoalRepository financialGoalRepository;
     private final AssetRepository assetRepository;
-    private final StockPriceHistoryRepository historyRepository;
-
+    private final StockPriceHistoryRepository stockPriceHistoryRepository;
     private final ChatModel chatModel;
+    private final ObjectMapper objectMapper;
+    private final InvestmentPlanRepository investmentPlanRepository;
+    private final InvestmentRepository investmentRepository;
+    @Autowired
+    public InvestmentPlanService(
+            FinancialGoalRepository financialGoalRepository,
+            AssetRepository assetRepository,
+            StockPriceHistoryRepository stockPriceHistoryRepository,
+            InvestmentPlanRepository investmentPlanRepository,
+            InvestmentRepository investmentRepository,
+            ChatModel chatModel,
+            ObjectMapper objectMapper
+    ) {
+        this.financialGoalRepository = financialGoalRepository;
+        this.assetRepository = assetRepository;
+        this.stockPriceHistoryRepository = stockPriceHistoryRepository;
+        this.investmentPlanRepository = investmentPlanRepository;
+        this.investmentRepository = investmentRepository;
+        this.chatModel = chatModel;
+        this.objectMapper = objectMapper;
+    }
 
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-    private static final ObjectMapper JSON = new ObjectMapper();
+    @Transactional
+    public void deletePlan(
+            Integer planId,
+            Integer userId
+    ) {
 
-    // Fallback annual return per risk level, used only when an asset doesn't have enough
-    // price history yet for the regression estimate below.
-    private static final Map<RiskLevel, Double> ANNUAL_RETURN_BY_RISK = Map.of(
-            RiskLevel.LOW, 0.04,
-            RiskLevel.MEDIUM, 0.08,
-            RiskLevel.HIGH, 0.12
-    );
+        InvestmentPlan plan =
+                investmentPlanRepository
+                        .findByIdAndUserIdAndIsActiveTrue(
+                                planId,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Investment plan not found: " + planId
+                                )
+                        );
 
-    public InvestmentPlanResponseDTO createInvestmentPlan(InvestmentPlanRequestDTO request) {
+        plan.setIsActive(false);
 
-        FinancialGoal goal = financialGoalRepository.findById(request.getFinancialGoalId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Financial goal not found: " + request.getFinancialGoalId()));
-
-        double targetAmount = goal.getTargetAmount();
-        int months =HelperUtility.calculateRemainingMonths(goal.getTargetDate()) ;
-
-        List<InvestmentPlanRequestDTO.AssetInput> assetInputs = request.getAssets();
-
-        // ---------------------------------------------------------------------------------
-        // CASE 1: No assets selected -> auto-pick from active assets at the goal's risk level
-        // ---------------------------------------------------------------------------------
-        if (assetInputs == null || assetInputs.isEmpty()) {
-
-            List<Asset> candidateAssets = new ArrayList<>();
-            for (Asset asset : assetRepository.findAllByIsActiveTrue()) {
-                if (asset.getRiskLevel() == goal.getRiskLevel()) {
-                    candidateAssets.add(asset);
-                }
-            }
-            if (candidateAssets.isEmpty()) {
-                throw new IllegalStateException(
-                        "No active assets available for risk level " + goal.getRiskLevel());
-            }
-
-            Map<Integer, Double> estimatedReturns = new LinkedHashMap<>();
-            for (Asset asset : candidateAssets) {
-                estimatedReturns.put(asset.getId(), estimateAnnualReturnRate(asset));
-            }
-
-            // The LLM may choose a subset of candidateAssets here (allowExclusion = true).
-            Map<Integer, LlmAllocation> llmResult = callLlmForAssetWeights(goal, candidateAssets, estimatedReturns, true);
-            boolean aiAssisted = llmResult != null;
-
-            List<Asset> chosenAssets = new ArrayList<>();
-            Map<Integer, Double> weights = new LinkedHashMap<>();
-            if (aiAssisted) {
-                for (Asset asset : candidateAssets) {
-                    if (llmResult.containsKey(asset.getId())) {
-                        chosenAssets.add(asset);
-                        weights.put(asset.getId(), llmResult.get(asset.getId()).weight());
-                    }
-                }
-            } else {
-                chosenAssets.addAll(candidateAssets);
-                double equalWeight = 1.0 / candidateAssets.size();
-                for (Asset asset : candidateAssets) {
-                    weights.put(asset.getId(), equalWeight);
-                }
-            }
-
-            double blendedAnnualReturnRate = 0.0;
-            for (Asset asset : chosenAssets) {
-                blendedAnnualReturnRate += weights.get(asset.getId()) * estimatedReturns.get(asset.getId());
-            }
-            double blendedMonthlyRate = blendedAnnualReturnRate / 12.0;
-
-            double monthlyInvestmentAmount = calculateRequiredMonthlyPayment(targetAmount, blendedMonthlyRate, months);
-            double totalProjectedValue = calculateFutureValue(monthlyInvestmentAmount, blendedMonthlyRate, months);
-            double totalContributions = monthlyInvestmentAmount * months;
-            double expectedTotalProfit = totalProjectedValue - totalContributions;
-            double expectedMonthlyProfit = expectedTotalProfit / months;
-
-            List<InvestmentPlanResponseDTO.AssetAllocationResponseDTO> allocations = new ArrayList<>();
-            for (Asset asset : chosenAssets) {
-                double weight = weights.get(asset.getId());
-                double assetMonthlyAmount = monthlyInvestmentAmount * weight;
-                double assetRate = estimatedReturns.get(asset.getId());
-                String reasoning = aiAssisted ? llmResult.get(asset.getId()).reasoning() : null;
-
-                allocations.add(InvestmentPlanResponseDTO.AssetAllocationResponseDTO.builder()
-                        .assetId(asset.getId())
-                        .assetName(asset.getName())
-                        .symbol(asset.getSymbol())
-                        .monthlyAmount(assetMonthlyAmount)
-                        .expectedAnnualReturnRate(assetRate)
-                        .expectedMonthlyProfit(expectedTotalProfit * weight / months)
-                        .reasoning(reasoning)
-                        .build());
-            }
-
-            return InvestmentPlanResponseDTO.builder()
-                    .planType("SYSTEM_GENERATED")
-                    .targetAmount(targetAmount)
-                    .timelineMonths(months)
-                    .monthlyInvestmentAmount(monthlyInvestmentAmount)
-                    .monthlySavingsRequired(monthlyInvestmentAmount)
-                    .expectedMonthlyProfit(expectedMonthlyProfit)
-                    .expectedTotalProfit(expectedTotalProfit)
-                    .aiAssisted(aiAssisted)
-                    .allocations(allocations)
-                    .build();
+        if (plan.getInvestment() != null) {
+            plan.getInvestment()
+                    .forEach(investment ->
+                            investment.setIsActive(false)
+                    );
         }
 
-        // Load and validate the assets the user selected (used by both case 2 and case 3 below)
-        List<Asset> selectedAssets = new ArrayList<>();
-        for (InvestmentPlanRequestDTO.AssetInput input : assetInputs) {
-            Asset asset = assetRepository.findById(input.getAssetId())
-                    .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + input.getAssetId()));
-            if (!Boolean.TRUE.equals(asset.getIsActive())) {
-                throw new IllegalArgumentException("Asset is not active: " + asset.getSymbol());
-            }
-            selectedAssets.add(asset);
-        }
+        investmentPlanRepository.save(plan);
+    }
 
-        boolean anyAmountProvided = false;
-        boolean allAmountsProvided = true;
-        for (InvestmentPlanRequestDTO.AssetInput input : assetInputs) {
-            if (input.getMonthlyAmount() != null) {
-                anyAmountProvided = true;
-            } else {
-                allAmountsProvided = false;
-            }
-        }
-        if (anyAmountProvided && !allAmountsProvided) {
-            throw new IllegalArgumentException(
-                    "Please provide a monthly amount for every selected asset, or leave all of them blank.");
-        }
+    @Transactional
+    public InvestmentPlanResponseDTO updatePlan(
+            Integer planId,
+            Integer userId,
+            InvestmentPlanRequestDTO request
+    ) {
 
-        // ---------------------------------------------------------------------------------
-        // CASE 2: Assets selected, no amounts -> size the investment ourselves
-        // ---------------------------------------------------------------------------------
-        if (!allAmountsProvided) {
+        InvestmentPlan existingPlan =
+                investmentPlanRepository
+                        .findByIdAndUserIdAndIsActiveTrue(
+                                planId,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Investment plan not found: " + planId
+                                )
+                        );
 
-            Map<Integer, Double> estimatedReturns = new LinkedHashMap<>();
-            for (Asset asset : selectedAssets) {
-                estimatedReturns.put(asset.getId(), estimateAnnualReturnRate(asset));
-            }
+        InvestmentPlanResponseDTO recalculatedPlan =
+                generateInvestmentPlan(request);
 
-            // No exclusion allowed here - every selected asset must appear in the plan.
-            Map<Integer, LlmAllocation> llmResult = callLlmForAssetWeights(goal, selectedAssets, estimatedReturns, false);
-            boolean aiAssisted = llmResult != null && llmResult.keySet().containsAll(idsOf(selectedAssets));
+        existingPlan.setTargetAmount(
+                recalculatedPlan.getTargetAmount()
+        );
 
-            Map<Integer, Double> weights = new LinkedHashMap<>();
-            if (aiAssisted) {
-                for (Asset asset : selectedAssets) {
-                    weights.put(asset.getId(), llmResult.get(asset.getId()).weight());
-                }
-            } else {
-                double equalWeight = 1.0 / selectedAssets.size();
-                for (Asset asset : selectedAssets) {
-                    weights.put(asset.getId(), equalWeight);
-                }
-            }
+        existingPlan.setDurationMonths(
+                recalculatedPlan.getTimelineMonths()
+        );
 
-            double blendedAnnualReturnRate = 0.0;
-            for (Asset asset : selectedAssets) {
-                blendedAnnualReturnRate += weights.get(asset.getId()) * estimatedReturns.get(asset.getId());
-            }
-            double blendedMonthlyRate = blendedAnnualReturnRate / 12.0;
+        existingPlan.setMonthlySavingAmount(
+                recalculatedPlan.getMonthlySavingsRequired()
+        );
 
-            double monthlyInvestmentAmount = calculateRequiredMonthlyPayment(targetAmount, blendedMonthlyRate, months);
-            double totalProjectedValue = calculateFutureValue(monthlyInvestmentAmount, blendedMonthlyRate, months);
-            double totalContributions = monthlyInvestmentAmount * months;
-            double expectedTotalProfit = totalProjectedValue - totalContributions;
-            double expectedMonthlyProfit = expectedTotalProfit / months;
+        existingPlan.setMonthlyInvestmentAmount(
+                recalculatedPlan.getMonthlyInvestmentAmount()
+        );
 
-            List<InvestmentPlanResponseDTO.AssetAllocationResponseDTO> allocations = new ArrayList<>();
-            for (Asset asset : selectedAssets) {
-                double weight = weights.get(asset.getId());
-                double assetMonthlyAmount = monthlyInvestmentAmount * weight;
-                double assetRate = estimatedReturns.get(asset.getId());
-                String reasoning = aiAssisted ? llmResult.get(asset.getId()).reasoning() : null;
+        existingPlan.setExpectedProfit(
+                recalculatedPlan.getExpectedTotalProfit()
+        );
 
-                allocations.add(InvestmentPlanResponseDTO.AssetAllocationResponseDTO.builder()
-                        .assetId(asset.getId())
-                        .assetName(asset.getName())
-                        .symbol(asset.getSymbol())
-                        .monthlyAmount(assetMonthlyAmount)
-                        .expectedAnnualReturnRate(assetRate)
-                        .expectedMonthlyProfit(expectedTotalProfit * weight / months)
-                        .reasoning(reasoning)
-                        .build());
-            }
+        existingPlan.setStatus(
+                Boolean.TRUE.equals(
+                        recalculatedPlan.getGoalAchievable()
+                )
+                        ? "ACHIEVABLE"
+                        : "NOT_ACHIEVABLE"
+        );
 
-            return InvestmentPlanResponseDTO.builder()
-                    .planType("USER_SELECTED")
-                    .targetAmount(targetAmount)
-                    .timelineMonths(months)
-                    .monthlyInvestmentAmount(monthlyInvestmentAmount)
-                    .expectedMonthlyProfit(expectedMonthlyProfit)
-                    .expectedTotalProfit(expectedTotalProfit)
-                    .aiAssisted(aiAssisted)
-                    .allocations(allocations)
-                    .build();
-        }
+        InvestmentPlan updatedPlan =
+                investmentPlanRepository.save(existingPlan);
 
-        // ---------------------------------------------------------------------------------
-        // CASE 3: Assets selected with exact monthly amounts -> use them as-is (no LLM call;
-        // there's nothing left to choose or weight, the user already decided the amounts)
-        // ---------------------------------------------------------------------------------
-        Map<Integer, Double> amountByAssetId = new HashMap<>();
-        for (InvestmentPlanRequestDTO.AssetInput input : assetInputs) {
-            if (input.getMonthlyAmount() <= 0) {
-                throw new IllegalArgumentException("Monthly amount for asset " + input.getAssetId()
-                        + " must be greater than 0.");
-            }
-            amountByAssetId.put(input.getAssetId(), input.getMonthlyAmount());
-        }
+        return InvestmentPlanResponseDTO
+                .mapToResponseDTO(updatedPlan);
+    }
+    @Transactional(readOnly = true)
+    public List<InvestmentPlanResponseDTO> getAllPlansForUser(
+            Integer userId
+    ) {
+        return investmentPlanRepository
+                .findByUserIdAndIsActiveTrueOrderByCreatedDateDesc(userId)
+                .stream()
+                .map(InvestmentPlanResponseDTO::mapToResponseDTO)
+                .toList();
+    }
 
-        double monthlyInvestmentAmount = 0.0;
-        double totalProjectedValue = 0.0;
-        List<InvestmentPlanResponseDTO.AssetAllocationResponseDTO> allocations = new ArrayList<>();
+    @Transactional(readOnly = true)
+    public InvestmentPlanResponseDTO getPlanById(
+            Integer planId,
+            Integer userId
+    ) {
+        InvestmentPlan plan =
+                investmentPlanRepository
+                        .findByIdAndUserIdAndIsActiveTrue(
+                                planId,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Investment plan not found: " + planId
+                                )
+                        );
 
-        for (Asset asset : selectedAssets) {
-            double assetMonthlyAmount = amountByAssetId.get(asset.getId());
-            double assetAnnualReturnRate = estimateAnnualReturnRate(asset);
-            double assetMonthlyRate = assetAnnualReturnRate / 12.0;
+        return InvestmentPlanResponseDTO.mapToResponseDTO(plan);
+    }
+    @Transactional(readOnly = true)
+    public InvestmentPlanResponseDTO generateInvestmentPlan(
+            InvestmentPlanRequestDTO request
+    ) {
+        validateRequest(request);
 
-            double assetProjectedValue = calculateFutureValue(assetMonthlyAmount, assetMonthlyRate, months);
-            double assetContributions = assetMonthlyAmount * months;
-            double assetMonthlyProfit = (assetProjectedValue - assetContributions) / months;
+        FinancialGoal goal = getFinancialGoal(
+                request.getFinancialGoalId()
+        );
 
-            monthlyInvestmentAmount += assetMonthlyAmount;
-            totalProjectedValue += assetProjectedValue;
+        User user = getGoalUser(goal);
 
-            allocations.add(InvestmentPlanResponseDTO.AssetAllocationResponseDTO.builder()
-                    .assetId(asset.getId())
-                    .assetName(asset.getName())
-                    .symbol(asset.getSymbol())
-                    .monthlyAmount(assetMonthlyAmount)
-                    .expectedAnnualReturnRate(assetAnnualReturnRate)
-                    .expectedMonthlyProfit(assetMonthlyProfit)
-                    .build());
-        }
+        double salary = safeNumber(user.getMonthlySalary());
+        double expenses = safeNumber(user.getMonthlyExpenses());
 
-        double totalContributions = monthlyInvestmentAmount * months;
-        double expectedTotalProfit = totalProjectedValue - totalContributions;
-        double expectedMonthlyProfit = expectedTotalProfit / months;
-        boolean goalAchievable = totalProjectedValue >= targetAmount;
+        double netMonthlySavingsCapacity =
+                Math.max(0, salary - expenses);
+
+        int timelineMonths = calculateTimelineMonths(
+                goal.getTargetDate()
+        );
+
+        double remainingTargetAmount =
+                calculateRemainingTargetAmount(goal);
+
+        List<Asset> candidateAssets =
+                getCandidateAssets(request);
+
+        Map<Integer, Double> annualReturnByAsset =
+                calculateAnnualReturns(candidateAssets);
+
+        List<AIAssetRecommendation> recommendations =
+                askOllamaForAllocation(
+                        goal,
+                        salary,
+                        expenses,
+                        netMonthlySavingsCapacity,
+                        timelineMonths,
+                        remainingTargetAmount,
+                        candidateAssets,
+                        annualReturnByAsset
+                );
+
+        List<AIAssetRecommendation> validRecommendations =
+                validateAndNormalizeRecommendations(
+                        recommendations,
+                        candidateAssets
+                );
+
+        double blendedAnnualReturn =
+                calculateBlendedAnnualReturn(
+                        validRecommendations,
+                        annualReturnByAsset
+                );
+
+        double requiredMonthlyInvestment =
+                calculateRequiredMonthlyInvestment(
+                        remainingTargetAmount,
+                        blendedAnnualReturn,
+                        timelineMonths
+                );
+
+        boolean goalAchievable =
+                netMonthlySavingsCapacity >= requiredMonthlyInvestment;
+
+        AllocationCalculation allocationCalculation =
+                buildAllocations(
+                        validRecommendations,
+                        candidateAssets,
+                        annualReturnByAsset,
+                        requiredMonthlyInvestment,
+                        timelineMonths
+                );
+
+        double totalProjectedValue =
+                allocationCalculation.totalProjectedValue();
+
+        double expectedTotalProfit =
+                allocationCalculation.expectedTotalProfit();
+
+        double averageMonthlyProfit =
+                timelineMonths > 0
+                        ? expectedTotalProfit / timelineMonths
+                        : 0;
 
         return InvestmentPlanResponseDTO.builder()
-                .planType("CUSTOM_ALLOCATION")
-                .targetAmount(targetAmount)
-                .timelineMonths(months)
-                .monthlyInvestmentAmount(monthlyInvestmentAmount)
-                .expectedMonthlyProfit(expectedMonthlyProfit)
-                .expectedTotalProfit(expectedTotalProfit)
-                .totalProjectedValue(totalProjectedValue)
+                .planType("AI_GENERATED")
+                .targetAmount(goal.getTargetAmount())
+                .timelineMonths(timelineMonths)
+                .monthlyInvestmentAmount(
+                        round(requiredMonthlyInvestment)
+                )
+                .monthlySavingsRequired(
+                        round(netMonthlySavingsCapacity)
+                )
+                .expectedMonthlyProfit(
+                        round(averageMonthlyProfit)
+                )
+                .expectedTotalProfit(
+                        round(expectedTotalProfit)
+                )
+                .totalProjectedValue(
+                        round(totalProjectedValue)
+                )
                 .goalAchievable(goalAchievable)
-                .aiAssisted(false)
-                .allocations(allocations)
+                .aiAssisted(true)
+                .allocations(
+                        allocationCalculation.allocations()
+                )
                 .build();
     }
 
-    // =====================================================================================
-    // RETURN ESTIMATION - simple linear regression over price history, annualized
-    // =====================================================================================
-
-    /**
-     * Fits a least-squares line through (daysSinceFirstRecord, price) and converts the slope
-     * into an annualized growth rate. Needs at least 3 history points to bother regressing;
-     * otherwise falls back to the flat risk-level assumption.
-     */
-    private double estimateAnnualReturnRate(Asset asset) {
-        List<StockPriceHistory> history = historyRepository.findByAssetAndIsActiveTrueOrderByRecordedAtAsc(asset);
-        if (history.size() < 3) {
-            return ANNUAL_RETURN_BY_RISK.get(asset.getRiskLevel());
+    private void validateRequest(
+            InvestmentPlanRequestDTO request
+    ) {
+        if (request == null) {
+            throw new IllegalArgumentException(
+                    "Investment plan request is required"
+            );
         }
 
-        var start = history.get(0).getRecordedAt();
-        int n = history.size();
-        double sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-
-        for (StockPriceHistory point : history) {
-            double x = Duration.between(start, point.getRecordedAt()).toDays();
-            double y = point.getPrice();
-            sumX += x;
-            sumY += y;
-            sumXY += x * y;
-            sumXX += x * x;
-        }
-
-        double meanX = sumX / n;
-        double meanY = sumY / n;
-        double denominator = sumXX - n * meanX * meanX;
-
-        if (denominator == 0 || meanY <= 0) {
-            return ANNUAL_RETURN_BY_RISK.get(asset.getRiskLevel());
-        }
-
-        double slopePerDay = (sumXY - n * meanX * meanY) / denominator;
-        double dailyGrowthRate = slopePerDay / meanY;
-        double annualReturnRate = dailyGrowthRate * 365;
-
-        // Clamp so a short or noisy history can't produce an absurd projection
-        return Math.max(-0.5, Math.min(annualReturnRate, 0.40));
-    }
-
-    // =====================================================================================
-    // LLM-ASSISTED ASSET WEIGHTING
-    // =====================================================================================
-
-    private record LlmAllocation(double weight, String reasoning) {
-    }
-
-    /**
-     * Asks Claude to weight (and, when allowExclusion is true, choose among) the candidate
-     * assets for this goal. Returns null on any failure - callers fall back to equal-weight.
-     */
-    private Map<Integer, LlmAllocation> callLlmForAssetWeights(FinancialGoal goal, List<Asset> candidateAssets,
-                                                            Map<Integer, Double> estimatedReturns,
-                                                            boolean allowExclusion) {
-        try {
-            List<Map<String, Object>> assetSummaries = new ArrayList<>();
-            for (Asset asset : candidateAssets) {
-                Map<String, Object> summary = new LinkedHashMap<>();
-                summary.put("assetId", asset.getId());
-                summary.put("name", asset.getName());
-                summary.put("symbol", asset.getSymbol());
-                summary.put("assetType", asset.getAssetType());
-                summary.put("riskLevel", asset.getRiskLevel());
-                summary.put("currentPrice", asset.getCurrentPrice());
-                summary.put("estimatedAnnualReturnRate", estimatedReturns.get(asset.getId()));
-                assetSummaries.add(summary);
-            }
-
-            String inclusionInstruction = allowExclusion
-                    ? "Choose a diversified subset of these assets that fits the goal's risk level and timeline - you don't have to include every asset."
-                    : "Every asset listed below was already chosen by the user - include ALL of them, you're only deciding how much weight each one gets, not which ones to include.";
-
-            String promptText = "You are an investment allocation assistant for a financial goal planning app.\n"
-                    + "Financial goal: targetAmount=" + goal.getTargetAmount() + " OMR, timelineMonths="
-                    + HelperUtility.calculateRemainingMonths(goal.getTargetDate()) + ", riskLevel=" + goal.getRiskLevel() + ".\n"
-                    + "Candidate assets (JSON): " + JSON.writeValueAsString(assetSummaries) + "\n"
-                    + inclusionInstruction + " "
-                    + "Assign each included asset a weight between 0 and 1 so the weights sum to exactly 1.0, favoring diversification across asset types where reasonable.\n"
-                    + "Respond with ONLY a JSON array, no prose, no markdown fences, in this exact shape: "
-                    + "[{\"assetId\": <number>, \"weight\": <number>, \"reasoning\": \"<one short sentence>\"}]";
-
-            String responseText = chatModel.call(promptText);
-
-            return parseLlmWeights(responseText, candidateAssets);
-
-        } catch (Exception e) {
-            log.warn("Ollama LLM asset weighting failed, falling back to equal-weight allocation: {}", e.getMessage());
-            return null; // Fallback للاستجابة العادية عند فشل الاتصال بـ Ollama
+        if (request.getFinancialGoalId() == null) {
+            throw new IllegalArgumentException(
+                    "Financial goal id is required"
+            );
         }
     }
 
-    private Map<Integer, LlmAllocation> parseLlmWeights(String llmText, List<Asset> candidateAssets) {
-        try {
-            int start = llmText.indexOf('[');
-            int end = llmText.lastIndexOf(']');
-            if (start == -1 || end == -1 || end < start) {
-                return null;
-            }
-            String jsonArray = llmText.substring(start, end + 1);
+    private FinancialGoal getFinancialGoal(
+            Integer financialGoalId
+    ) {
+        return financialGoalRepository
+                .findById(financialGoalId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException(
+                                "Financial goal not found: "
+                                        + financialGoalId
+                        )
+                );
+    }
 
-            List<Map<String, Object>> items = JSON.readValue(jsonArray, List.class);
+    private User getGoalUser(
+            FinancialGoal goal
+    ) {
+        User user = goal.getUser();
 
-            Set<Integer> validIds = new HashSet<>(idsOf(candidateAssets));
-            Map<Integer, LlmAllocation> raw = new LinkedHashMap<>();
-            double weightSum = 0;
+        if (user == null) {
+            throw new IllegalStateException(
+                    "Financial goal is not associated with a user"
+            );
+        }
 
-            for (Map<String, Object> item : items) {
-                Integer assetId = Integer.valueOf(String.valueOf(item.get("assetId")));
-                double weight = Double.parseDouble(String.valueOf(item.get("weight")));
-                String reasoning = String.valueOf(item.getOrDefault("reasoning", ""));
+        return user;
+    }
 
-                if (validIds.contains(assetId) && weight > 0) {
-                    raw.put(assetId, new LlmAllocation(weight, reasoning));
-                    weightSum += weight;
+    private int calculateTimelineMonths(
+            LocalDate targetDate
+    ) {
+        if (targetDate == null) {
+            throw new IllegalArgumentException(
+                    "Financial goal target date is required"
+            );
+        }
+
+        long months = ChronoUnit.MONTHS.between(
+                LocalDate.now(),
+                targetDate
+        );
+
+        return (int) Math.max(1, months);
+    }
+
+    private double calculateRemainingTargetAmount(
+            FinancialGoal goal
+    ) {
+        double targetAmount =
+                safeNumber(goal.getTargetAmount());
+
+        double currentAmount =
+                safeNumber(goal.getCurrentAmount());
+
+        if (targetAmount <= 0) {
+            throw new IllegalArgumentException(
+                    "Goal target amount must be greater than zero"
+            );
+        }
+
+        return Math.max(
+                0,
+                targetAmount - currentAmount
+        );
+    }
+
+    private List<Asset> getCandidateAssets(
+            InvestmentPlanRequestDTO request
+    ) {
+        List<Asset> activeAssets =
+                assetRepository.findAllByIsActiveTrue();
+
+        if (activeAssets == null || activeAssets.isEmpty()) {
+            throw new IllegalStateException(
+                    "No active assets are available"
+            );
+        }
+
+        /*
+         * If the user sends asset IDs, use only those assets.
+         * The monthlyAmount from the request is ignored because
+         * the system calculates the required monthly investment.
+         */
+        if (request.getAssets() != null
+                && !request.getAssets().isEmpty()) {
+
+            List<Integer> requestedAssetIds =
+                    request.getAssets()
+                            .stream()
+                            .filter(input ->
+                                    input.getAssetId() != null
+                            )
+                            .map(
+                                    InvestmentPlanRequestDTO
+                                            .AssetInput::getAssetId
+                            )
+                            .distinct()
+                            .toList();
+
+            if (!requestedAssetIds.isEmpty()) {
+                List<Asset> selectedAssets =
+                        activeAssets.stream()
+                                .filter(asset ->
+                                        requestedAssetIds.contains(
+                                                asset.getId()
+                                        )
+                                )
+                                .toList();
+
+                if (selectedAssets.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "None of the selected assets are active or available"
+                    );
                 }
-            }
 
-            if (raw.isEmpty() || weightSum <= 0) {
-                return null;
+                return selectedAssets;
             }
-
-            // Normalize so the weights sum to exactly 1.0, in case the model's numbers were off
-            Map<Integer, LlmAllocation> normalized = new LinkedHashMap<>();
-            for (Map.Entry<Integer, LlmAllocation> entry : raw.entrySet()) {
-                LlmAllocation allocation = entry.getValue();
-                normalized.put(entry.getKey(), new LlmAllocation(allocation.weight() / weightSum, allocation.reasoning()));
-            }
-            return normalized;
-
-        } catch (Exception e) {
-            log.warn("Could not parse LLM asset weights: {}", e.getMessage());
-            return null;
         }
+
+        return activeAssets;
     }
 
-    private List<Integer> idsOf(List<Asset> assets) {
-        List<Integer> ids = new ArrayList<>();
+    private Map<Integer, Double> calculateAnnualReturns(
+            List<Asset> assets
+    ) {
+        Map<Integer, Double> returns = new HashMap<>();
+
         for (Asset asset : assets) {
-            ids.add(asset.getId());
+            returns.put(
+                    asset.getId(),
+                    calculateAnnualReturn(asset)
+            );
         }
-        return ids;
+
+        return returns;
     }
 
-    // =====================================================================================
-    // FINANCIAL MATH - plain arithmetic, unaffected by the AI/regression estimates above
-    // =====================================================================================
+    private double calculateAnnualReturn(
+            Asset asset
+    ) {
+        List<StockPriceHistory> history =
+                stockPriceHistoryRepository
+                        .findByAssetAndIsActiveTrueOrderByRecordedAtAsc(
+                                asset
+                        );
 
-    private double calculateFutureValue(double monthlyPayment, double monthlyRate, int months) {
-        if (monthlyRate == 0.0) {
-            return monthlyPayment * months;
+        if (history == null || history.size() < 2) {
+            return DEFAULT_ANNUAL_RETURN;
         }
-        return monthlyPayment * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+
+        StockPriceHistory firstRecord =
+                history.get(0);
+
+        StockPriceHistory lastRecord =
+                history.get(history.size() - 1);
+
+        if (firstRecord.getPrice() == null
+                || lastRecord.getPrice() == null
+                || firstRecord.getPrice() <= 0
+                || lastRecord.getPrice() <= 0) {
+            return DEFAULT_ANNUAL_RETURN;
+        }
+
+        LocalDateTime firstDate =
+                firstRecord.getRecordedAt();
+
+        LocalDateTime lastDate =
+                lastRecord.getRecordedAt();
+
+        if (firstDate == null
+                || lastDate == null
+                || !lastDate.isAfter(firstDate)) {
+            return calculateSimpleReturn(
+                    firstRecord.getPrice(),
+                    lastRecord.getPrice()
+            );
+        }
+
+        long days =
+                ChronoUnit.DAYS.between(
+                        firstDate,
+                        lastDate
+                );
+
+        if (days <= 0) {
+            return calculateSimpleReturn(
+                    firstRecord.getPrice(),
+                    lastRecord.getPrice()
+            );
+        }
+
+        double years = days / 365.25;
+
+        if (years < 0.08) {
+            return calculateSimpleReturn(
+                    firstRecord.getPrice(),
+                    lastRecord.getPrice()
+            );
+        }
+
+        double annualizedReturn =
+                Math.pow(
+                        lastRecord.getPrice()
+                                / firstRecord.getPrice(),
+                        1.0 / years
+                ) - 1.0;
+
+        return limitReturn(annualizedReturn);
     }
 
-    private double calculateRequiredMonthlyPayment(double targetAmount, double monthlyRate, int months) {
-        if (monthlyRate == 0.0) {
-            return targetAmount / months;
+    private double calculateSimpleReturn(
+            double firstPrice,
+            double lastPrice
+    ) {
+        if (firstPrice <= 0) {
+            return DEFAULT_ANNUAL_RETURN;
         }
-        double factor = (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
-        return targetAmount / factor;
+
+        double simpleReturn =
+                (lastPrice - firstPrice)
+                        / firstPrice;
+
+        return limitReturn(simpleReturn);
+    }
+
+    private double limitReturn(
+            double annualReturn
+    ) {
+        if (!Double.isFinite(annualReturn)) {
+            return DEFAULT_ANNUAL_RETURN;
+        }
+
+        return Math.max(
+                MIN_REASONABLE_ANNUAL_RETURN,
+                Math.min(
+                        MAX_REASONABLE_ANNUAL_RETURN,
+                        annualReturn
+                )
+        );
+    }
+
+    private List<AIAssetRecommendation>
+    askOllamaForAllocation(
+            FinancialGoal goal,
+            double salary,
+            double expenses,
+            double savingsCapacity,
+            int timelineMonths,
+            double remainingTargetAmount,
+            List<Asset> assets,
+            Map<Integer, Double> annualReturnByAsset
+    ) {
+        try {
+            List<Map<String, Object>> assetData =
+                    new ArrayList<>();
+
+            for (Asset asset : assets) {
+                Map<String, Object> data =
+                        new HashMap<>();
+
+                data.put(
+                        "assetId",
+                        asset.getId()
+                );
+
+                data.put(
+                        "name",
+                        asset.getName()
+                );
+
+                data.put(
+                        "symbol",
+                        asset.getSymbol()
+                );
+
+                data.put(
+                        "assetType",
+                        asset.getAssetType() == null
+                                ? null
+                                : asset.getAssetType().toString()
+                );
+
+                data.put(
+                        "riskLevel",
+                        asset.getRiskLevel() == null
+                                ? null
+                                : asset.getRiskLevel().toString()
+                );
+
+                data.put(
+                        "currentPrice",
+                        asset.getCurrentPrice()
+                );
+
+                data.put(
+                        "estimatedAnnualReturn",
+                        annualReturnByAsset.getOrDefault(
+                                asset.getId(),
+                                DEFAULT_ANNUAL_RETURN
+                        )
+                );
+
+                assetData.add(data);
+            }
+
+            String prompt = """
+                    You are an AI assistant for an investment goal management platform.
+
+                    Your responsibility is only to recommend a diversified allocation
+                    among the provided assets. Java code will perform all financial calculations.
+
+                    USER FINANCIAL PROFILE:
+                    - Monthly salary: %.2f OMR
+                    - Monthly expenses: %.2f OMR
+                    - Net monthly savings capacity: %.2f OMR
+
+                    FINANCIAL GOAL:
+                    - Goal name: %s
+                    - Original target amount: %.2f OMR
+                    - Remaining target amount: %.2f OMR
+                    - Timeline: %d months
+                    - Preferred goal risk level: %s
+
+                    AVAILABLE ASSETS:
+                    %s
+
+                    STRICT RULES:
+                    1. Use only assetId values from AVAILABLE ASSETS.
+                    2. Select at least 2 distinct assets when at least 2 assets are available.
+                    3. Do not repeat an assetId.
+                    4. Every weight must be greater than 0.
+                    5. All weights must sum exactly to 1.0.
+                    6. Consider diversification, asset type, risk level, and estimated return.
+                    7. Give one short reasoning sentence for every selected asset.
+                    8. Return only a raw JSON array.
+                    9. Do not include markdown, code fences, headings, or explanations outside JSON.
+
+                    REQUIRED JSON FORMAT:
+                    [
+                      {
+                        "assetId": 1,
+                        "weight": 0.60,
+                        "reasoning": "Provides growth exposure while fitting the goal timeline."
+                      },
+                      {
+                        "assetId": 2,
+                        "weight": 0.40,
+                        "reasoning": "Adds diversification and reduces portfolio concentration."
+                      }
+                    ]
+                    """.formatted(
+                    salary,
+                    expenses,
+                    savingsCapacity,
+                    goal.getGoalName(),
+                    safeNumber(goal.getTargetAmount()),
+                    remainingTargetAmount,
+                    timelineMonths,
+                    goal.getRiskLevel() == null
+                            ? "NOT_SPECIFIED"
+                            : goal.getRiskLevel().toString(),
+                    objectMapper.writeValueAsString(assetData)
+            );
+
+            String response =
+                    chatModel.call(prompt);
+
+            String cleanJson =
+                    extractJsonArray(response);
+
+            List<AIAssetRecommendation> parsed =
+                    objectMapper.readValue(
+                            cleanJson,
+                            new TypeReference<
+                                    List<AIAssetRecommendation>
+                                    >() {
+                            }
+                    );
+
+            if (parsed == null || parsed.isEmpty()) {
+                throw new IllegalStateException(
+                        "Ollama returned an empty allocation"
+                );
+            }
+
+            return parsed;
+
+        } catch (Exception exception) {
+            log.warn(
+                    "Ollama allocation failed. Using fallback allocation. Reason: {}",
+                    exception.getMessage()
+            );
+
+            return createFallbackAllocation(assets);
+        }
+    }
+
+    private String extractJsonArray(
+            String response
+    ) {
+        if (response == null || response.isBlank()) {
+            throw new IllegalStateException(
+                    "Ollama returned an empty response"
+            );
+        }
+
+        String cleaned =
+                response
+                        .replace("```json", "")
+                        .replace("```JSON", "")
+                        .replace("```", "")
+                        .trim();
+
+        int start = cleaned.indexOf('[');
+        int end = cleaned.lastIndexOf(']');
+
+        if (start < 0 || end < start) {
+            throw new IllegalStateException(
+                    "Ollama response does not contain a JSON array"
+            );
+        }
+
+        return cleaned.substring(
+                start,
+                end + 1
+        );
+    }
+
+    private List<AIAssetRecommendation>
+    createFallbackAllocation(
+            List<Asset> assets
+    ) {
+        int numberOfAssets =
+                Math.min(
+                        MINIMUM_DIVERSIFIED_ASSETS,
+                        assets.size()
+                );
+
+        double equalWeight =
+                1.0 / numberOfAssets;
+
+        return assets.stream()
+                .limit(numberOfAssets)
+                .map(asset ->
+                        new AIAssetRecommendation(
+                                asset.getId(),
+                                equalWeight,
+                                "Balanced fallback allocation because the AI response was unavailable."
+                        )
+                )
+                .toList();
+    }
+
+    private List<AIAssetRecommendation>
+    validateAndNormalizeRecommendations(
+            List<AIAssetRecommendation> recommendations,
+            List<Asset> candidateAssets
+    ) {
+        Map<Integer, Asset> candidateById =
+                new HashMap<>();
+
+        for (Asset asset : candidateAssets) {
+            candidateById.put(
+                    asset.getId(),
+                    asset
+            );
+        }
+
+        Map<Integer, AIAssetRecommendation> unique =
+                new HashMap<>();
+
+        if (recommendations != null) {
+            for (AIAssetRecommendation recommendation
+                    : recommendations) {
+
+                if (recommendation == null
+                        || recommendation.assetId() == null
+                        || recommendation.weight() == null
+                        || recommendation.weight() <= 0
+                        || !candidateById.containsKey(
+                        recommendation.assetId()
+                )) {
+                    continue;
+                }
+
+                unique.put(
+                        recommendation.assetId(),
+                        recommendation
+                );
+            }
+        }
+
+        List<AIAssetRecommendation> valid =
+                new ArrayList<>(unique.values());
+
+        int requiredMinimum =
+                Math.min(
+                        MINIMUM_DIVERSIFIED_ASSETS,
+                        candidateAssets.size()
+                );
+
+        if (valid.size() < requiredMinimum) {
+            return createFallbackAllocation(
+                    candidateAssets
+            );
+        }
+
+        double totalWeight =
+                valid.stream()
+                        .mapToDouble(
+                                AIAssetRecommendation::weight
+                        )
+                        .sum();
+
+        if (totalWeight <= 0
+                || !Double.isFinite(totalWeight)) {
+            return createFallbackAllocation(
+                    candidateAssets
+            );
+        }
+
+        List<AIAssetRecommendation> normalized =
+                new ArrayList<>();
+
+        for (AIAssetRecommendation recommendation
+                : valid) {
+
+            double normalizedWeight =
+                    recommendation.weight()
+                            / totalWeight;
+
+            normalized.add(
+                    new AIAssetRecommendation(
+                            recommendation.assetId(),
+                            normalizedWeight,
+                            hasText(
+                                    recommendation.reasoning()
+                            )
+                                    ? recommendation.reasoning()
+                                    : "Selected for portfolio diversification."
+                    )
+            );
+        }
+
+        return normalized;
+    }
+
+    private double calculateBlendedAnnualReturn(
+            List<AIAssetRecommendation> recommendations,
+            Map<Integer, Double> annualReturnByAsset
+    ) {
+        double blendedReturn = 0;
+
+        for (AIAssetRecommendation recommendation
+                : recommendations) {
+
+            double annualReturn =
+                    annualReturnByAsset.getOrDefault(
+                            recommendation.assetId(),
+                            DEFAULT_ANNUAL_RETURN
+                    );
+
+            blendedReturn +=
+                    recommendation.weight()
+                            * annualReturn;
+        }
+
+        return limitReturn(blendedReturn);
+    }
+
+    private double calculateRequiredMonthlyInvestment(
+            double remainingTargetAmount,
+            double annualReturn,
+            int months
+    ) {
+        if (remainingTargetAmount <= 0) {
+            return 0;
+        }
+
+        if (months <= 0) {
+            throw new IllegalArgumentException(
+                    "Timeline must be at least one month"
+            );
+        }
+
+        double monthlyRate =
+                annualReturn / 12.0;
+
+        /*
+         * When the expected return is zero or negative,
+         * use simple monthly saving calculation.
+         */
+        if (monthlyRate <= 0) {
+            return remainingTargetAmount / months;
+        }
+
+        double growthFactor =
+                Math.pow(
+                        1 + monthlyRate,
+                        months
+                ) - 1;
+
+        if (growthFactor <= 0
+                || !Double.isFinite(growthFactor)) {
+            return remainingTargetAmount / months;
+        }
+
+        return remainingTargetAmount
+                * monthlyRate
+                / growthFactor;
+    }
+
+    private AllocationCalculation buildAllocations(
+            List<AIAssetRecommendation> recommendations,
+            List<Asset> candidateAssets,
+            Map<Integer, Double> annualReturnByAsset,
+            double requiredMonthlyInvestment,
+            int timelineMonths
+    ) {
+        Map<Integer, Asset> assetById =
+                new HashMap<>();
+
+        for (Asset asset : candidateAssets) {
+            assetById.put(
+                    asset.getId(),
+                    asset
+            );
+        }
+
+        List<InvestmentPlanResponseDTO
+                .AssetAllocationResponseDTO> allocations =
+                new ArrayList<>();
+
+        double totalProjectedValue = 0;
+        double expectedTotalProfit = 0;
+
+        for (AIAssetRecommendation recommendation
+                : recommendations) {
+
+            Asset asset =
+                    assetById.get(
+                            recommendation.assetId()
+                    );
+
+            if (asset == null) {
+                continue;
+            }
+
+            double monthlyAmount =
+                    requiredMonthlyInvestment
+                            * recommendation.weight();
+
+            double annualReturn =
+                    annualReturnByAsset.getOrDefault(
+                            asset.getId(),
+                            DEFAULT_ANNUAL_RETURN
+                    );
+
+            double monthlyRate =
+                    annualReturn / 12.0;
+
+            double futureValue =
+                    calculateFutureValueOfMonthlyInvestments(
+                            monthlyAmount,
+                            monthlyRate,
+                            timelineMonths
+                    );
+
+            double totalInvested =
+                    monthlyAmount
+                            * timelineMonths;
+
+            double assetTotalProfit =
+                    futureValue - totalInvested;
+
+            double assetAverageMonthlyProfit =
+                    timelineMonths > 0
+                            ? assetTotalProfit
+                            / timelineMonths
+                            : 0;
+
+            totalProjectedValue += futureValue;
+            expectedTotalProfit += assetTotalProfit;
+
+            allocations.add(
+                    InvestmentPlanResponseDTO
+                            .AssetAllocationResponseDTO
+                            .builder()
+                            .assetId(asset.getId())
+                            .assetName(asset.getName())
+                            .symbol(asset.getSymbol())
+                            .monthlyAmount(
+                                    round(monthlyAmount)
+                            )
+                            .expectedAnnualReturnRate(
+                                    round(annualReturn)
+                            )
+                            .expectedMonthlyProfit(
+                                    round(
+                                            assetAverageMonthlyProfit
+                                    )
+                            )
+                            .reasoning(
+                                    recommendation.reasoning()
+                            )
+                            .build()
+            );
+        }
+
+        return new AllocationCalculation(
+                allocations,
+                totalProjectedValue,
+                expectedTotalProfit
+        );
+    }
+
+    private double calculateFutureValueOfMonthlyInvestments(
+            double monthlyInvestment,
+            double monthlyRate,
+            int months
+    ) {
+        if (monthlyInvestment <= 0
+                || months <= 0) {
+            return 0;
+        }
+
+        if (monthlyRate <= 0) {
+            return monthlyInvestment
+                    * months;
+        }
+
+        double futureValue =
+                monthlyInvestment
+                        * (
+                        (
+                                Math.pow(
+                                        1 + monthlyRate,
+                                        months
+                                ) - 1
+                        )
+                                / monthlyRate
+                );
+
+        if (!Double.isFinite(futureValue)) {
+            return monthlyInvestment
+                    * months;
+        }
+
+        return futureValue;
+    }
+
+    private double safeNumber(
+            Number value
+    ) {
+        return value == null
+                ? 0
+                : value.doubleValue();
+    }
+
+    private boolean hasText(
+            String value
+    ) {
+        return value != null
+                && !value.isBlank();
+    }
+
+    private double round(
+            double value
+    ) {
+        return Math.round(value * 100.0)
+                / 100.0;
+    }
+
+    public record AIAssetRecommendation(
+            Integer assetId,
+            Double weight,
+            String reasoning
+    ) {
+    }
+
+    private record AllocationCalculation(
+            List<InvestmentPlanResponseDTO
+                    .AssetAllocationResponseDTO> allocations,
+            double totalProjectedValue,
+            double expectedTotalProfit
+    ) {
     }
 }

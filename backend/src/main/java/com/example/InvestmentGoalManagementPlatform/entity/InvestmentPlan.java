@@ -21,6 +21,15 @@ public class InvestmentPlan extends BaseEntity {
     private Double monthlyInvestmentAmount;
     private Double expectedProfit;
     private String status;
+    private String planType;
+
+    private Double expectedMonthlyProfit;
+
+    private Double totalProjectedValue;
+
+    private Boolean goalAchievable;
+
+    private Boolean aiAssisted;
 
     @ManyToOne
     private User user;
