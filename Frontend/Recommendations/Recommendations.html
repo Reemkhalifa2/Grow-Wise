@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Namaa — AI investment plan</title>
+<link rel="stylesheet" href="Recommendations.css" />
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 20V10M11 20V4M18 20V13" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Namaa</div>
+        <div class="brand-tagline">Invest with direction</div>
+      </div>
+    </div>
+
+    <nav class="nav-group">
+      <a href="index.html" class="nav-item" data-nav="overview">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>Overview</span>
+      </a>
+      <a href="financial-profile.html" class="nav-item" data-nav="profile">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4l2.5 2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>Financial profile</span>
+      </a>
+      <a href="investment-goal.html" class="nav-item" data-nav="goal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+        <span>Investment goal</span>
+      </a>
+      <a href="#" class="nav-item active" data-nav="ai">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3l1.8 4.5L18 9l-4.2 1.7L12 15l-1.8-4.3L6 9l4.2-1.5L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M18.5 15l.9 2.1L21.5 18l-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <span>AI plan</span>
+      </a>
+      <a href="portfolio.html" class="nav-item" data-nav="portfolio">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 7V5.5A1.5 1.5 0 019.5 4h5A1.5 1.5 0 0116 5.5V7" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>Portfolio</span>
+      </a>
+      <a href="history.html" class="nav-item" data-nav="history">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>History</span>
+      </a>
+    </nav>
+
+    <div class="nav-section-label">Administration</div>
+
+    <nav class="nav-group">
+      <a href="#" class="nav-item" data-nav="admin">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <span>Admin overview</span>
+      </a>
+      <a href="assets.html" class="nav-item" data-nav="assets">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 10h16" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>Assets</span>
+      </a>
+      <a href="market-data.html" class="nav-item" data-nav="market">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 18l5-6 4 3 7-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Market data</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="topbar-date" id="topbarDate">Loading date...</div>
+      <div class="topbar-user">
+        <div class="user-info">
+          <div class="user-name" id="userName">Loading...</div>
+          <div class="user-role" id="userRole"></div>
+        </div>
+        <div class="user-avatar" id="userAvatar">--</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="eyebrow">Personalized guidance</div>
+      <h1 class="greeting">Your AI investment plan</h1>
+      <p class="greeting-sub link-sub" id="planSubtitle">Loading your personalized details...</p>
+
+      <div class="charts-row ai-plan-row">
+        <div class="panel ai-panel ai-panel-large">
+          <div class="ai-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3l1.8 4.5L18 9l-4.2 1.7L12 15l-1.8-4.3L6 9l4.2-1.5L12 3z" fill="white"/></svg>
+            AI plan preview
+          </div>
+          <div class="ai-headline" id="aiHeadline">--</div>
+          <p class="ai-sub" id="aiSub"></p>
+          <div class="ai-split" id="aiSplit">
+            <!-- populated dynamically from the backend -->
+          </div>
+          <div class="ai-disclaimer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v5M12 16.5v.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Estimates use historical patterns and are not guaranteed. Markets can fall and you may lose money.
+          </div>
+        </div>
+
+        <div class="panel allocation-panel">
+          <div class="panel-title">Portfolio allocation</div>
+          <div class="donut-wrap">
+            <canvas id="allocationChart"></canvas>
+          </div>
+          <ul class="legend" id="allocationLegend">
+            <!-- populated dynamically from the backend -->
+          </ul>
+        </div>
+      </div>
+
+      <div class="bottom-row ai-bottom-row">
+        <div class="panel fit-panel">
+          <div class="panel-title fit-title">Why this mix fits you</div>
+          <ul class="fit-list" id="fitList">
+            <!-- populated dynamically from the backend -->
+          </ul>
+        </div>
+
+        <div class="panel scenario-panel">
+          <div class="panel-title scenario-title">Historical scenario</div>
+          <div class="scenario-range" id="scenarioRange">--</div>
+          <div class="scenario-sub" id="scenarioSub"></div>
+          <div class="scenario-divider"></div>
+          <p class="scenario-note" id="scenarioNote"></p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="ai-plan.js"></script>
+</body>
+</html>
