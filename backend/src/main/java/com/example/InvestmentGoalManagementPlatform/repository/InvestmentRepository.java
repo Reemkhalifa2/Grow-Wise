@@ -62,5 +62,33 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
 
     @Query("SELECT i FROM Investment i " + "WHERE i.user.id = :userId AND i.investmentPlan.id = :planId AND i.isActive = true")
     List<Investment> findByUserIdAndPlanId(@Param("userId") Integer userId, @Param("planId") Integer planId);
+    long countByIsActiveTrue();
+
+    @Query("""
+           SELECT COALESCE(SUM(i.amountInvested), 0)
+           FROM Investment i
+           WHERE i.isActive = true
+           """)
+    Double calculateTotalInvestmentAmount();
+
+    @Query("""
+           SELECT COALESCE(SUM(i.currentValue), 0)
+           FROM Investment i
+           WHERE i.isActive = true
+           """)
+    Double calculateTotalCurrentValue();
+
+    @Query("""
+           SELECT COALESCE(
+               SUM(
+                   COALESCE(i.currentValue, 0)
+                   - COALESCE(i.amountInvested, 0)
+               ),
+               0
+           )
+           FROM Investment i
+           WHERE i.isActive = true
+           """)
+    Double calculateTotalProfit();
 }
 
