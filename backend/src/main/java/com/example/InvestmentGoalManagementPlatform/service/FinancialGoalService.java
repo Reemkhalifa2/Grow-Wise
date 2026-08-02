@@ -33,6 +33,7 @@ public class FinancialGoalService {
 
         FinancialGoal financialGoal = dto.toEntity();
         financialGoal.setUser(user);
+
         financialGoal = financialGoalRepository.save(financialGoal);
 
         return FinancialGoalDTO.fromEntity(financialGoal);

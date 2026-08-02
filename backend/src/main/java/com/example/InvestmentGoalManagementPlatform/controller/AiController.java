@@ -1,23 +1,25 @@
 package com.example.InvestmentGoalManagementPlatform.controller;
 
 import com.example.InvestmentGoalManagementPlatform.service.AiService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
 
+
     private final AiService aiService;
 
-    public AiController(AiService aiService) {
+
+    public AiController(AiService aiService){
         this.aiService = aiService;
     }
 
-    @PostMapping("/chat")
-    public String chat(@RequestBody String message) {
-        return aiService.askAI(message);
+
+    @PostMapping("/ask")
+    public String ask(@RequestBody String question){
+
+        return aiService.askAI(question);
     }
+
 }
