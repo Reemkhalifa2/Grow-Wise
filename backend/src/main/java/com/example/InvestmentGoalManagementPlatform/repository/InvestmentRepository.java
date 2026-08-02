@@ -64,6 +64,7 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
     List<Investment> findByUserIdAndPlanId(@Param("userId") Integer userId, @Param("planId") Integer planId);
     long countByIsActiveTrue();
 
+
     @Query("""
            SELECT COALESCE(SUM(i.amountInvested), 0)
            FROM Investment i
@@ -72,7 +73,13 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
     Double calculateTotalInvestmentAmount();
 
     @Query("""
-           SELECT COALESCE(SUM(i.currentValue), 0)
+           SELECT COALESCE(
+               SUM(
+                   COALESCE(i.quantity, 0)
+                   * COALESCE(i.asset.currentPrice, 0)
+               ),
+               0
+           )
            FROM Investment i
            WHERE i.isActive = true
            """)
@@ -81,7 +88,10 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
     @Query("""
            SELECT COALESCE(
                SUM(
-                   COALESCE(i.currentValue, 0)
+                   (
+                       COALESCE(i.quantity, 0)
+                       * COALESCE(i.asset.currentPrice, 0)
+                   )
                    - COALESCE(i.amountInvested, 0)
                ),
                0

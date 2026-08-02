@@ -13,6 +13,7 @@ import java.util.List;
 @Repository
 public interface InvestmentPlanRepository extends JpaRepository<InvestmentPlan, Integer> {
 
+
     @Query("SELECT p FROM InvestmentPlan p " + "WHERE p.user.id = :userId AND p.isActive = true")
     List<InvestmentPlan> findByUserId(@Param("userId") Integer userId);
 
