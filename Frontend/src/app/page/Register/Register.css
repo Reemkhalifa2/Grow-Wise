@@ -1,4 +1,4 @@
-:root {
+:host {
   --bg: #f7f8fa;
   --ink: #1a2233;
   --muted: #6b7280;
@@ -10,8 +10,23 @@
   --radius-lg: 20px;
   --radius-md: 12px;
   --radius-full: 999px;
-  --shadow-card: 0 1px 3px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.05);
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --shadow-card:
+    0 1px 3px rgba(16, 24, 40, 0.04),
+    0 8px 24px rgba(16, 24, 40, 0.05);
+  --font:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
 }
 
 * {
@@ -111,7 +126,41 @@ body {
 .btn-google:active {
   transform: scale(0.99);
 }
+.btn-submit {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 16px;
+  margin-top: 4px;
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: #16694f;
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  visibility: visible;
+  opacity: 1;
+  transition:
+    background-color 0.15s ease,
+    transform 0.05s ease;
+}
 
+.btn-submit:hover:not(:disabled) {
+  background-color: #12573f;
+}
+
+.btn-submit:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.btn-submit:disabled {
+  background-color: #7da99b;
+  color: #ffffff;
+  opacity: 1;
+  cursor: not-allowed;
+}
 /* Divider */
 .divider {
   display: flex;
@@ -291,30 +340,4 @@ form {
   .brand h1 {
     font-size: 24px;
   }
-}
-
-/* ---------------- Reset password page ---------------- */
-
-.back-row {
-  margin: 0;
-  font-size: 14px;
-  text-align: center;
-}
-
-.back-row a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--green);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.back-row a:hover {
-  text-decoration: underline;
-}
-
-.btn-submit:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }

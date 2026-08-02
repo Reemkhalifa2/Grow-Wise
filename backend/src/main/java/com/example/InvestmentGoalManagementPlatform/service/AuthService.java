@@ -32,7 +32,7 @@ public class AuthService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // hash it!
-        user.setRole(Role.valueOf(request.getRole().toUpperCase()));
+        user.setRole(Role.USER);
 
         userRepository.save(user);
 
