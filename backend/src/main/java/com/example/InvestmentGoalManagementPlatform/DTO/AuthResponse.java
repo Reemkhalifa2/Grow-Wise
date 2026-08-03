@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
+    private Integer id;
+    private String fullName;
     private String token;
     private String email;
     private String role;

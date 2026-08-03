@@ -1,0 +1,249 @@
+<div class="content">
+
+  @if (loading) {
+    <div class="loading-message">
+      Loading dashboard...
+    </div>
+  } @else if (errorMessage) {
+    <div class="dashboard-error">
+      {{ errorMessage }}
+    </div>
+  } @else {
+
+    <div class="eyebrow">
+      Your wealth plan
+    </div>
+
+    <h1 class="greeting">
+      {{ greeting }}
+    </h1>
+
+    <p class="greeting-sub">
+      Your investments are moving steadily toward your goal.
+    </p>
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">
+            Total invested
+          </span>
+
+          <span class="stat-icon">$</span>
+        </div>
+
+        <div class="stat-value">
+          {{ stats.totalInvested | number:'1.2-2' }}
+          OMR
+        </div>
+
+        <div class="stat-delta positive">
+          Total contributions
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">
+            Portfolio value
+          </span>
+
+          <span class="stat-icon">↗</span>
+        </div>
+
+        <div class="stat-value">
+          {{ stats.portfolioValue | number:'1.2-2' }}
+          OMR
+        </div>
+
+        <div class="stat-delta positive">
+          Current estimated value
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">
+            Total profit
+          </span>
+
+          <span class="stat-icon">+</span>
+        </div>
+
+        <div class="stat-value">
+          {{ stats.totalProfit | number:'1.2-2' }}
+          OMR
+        </div>
+
+        <div class="stat-delta positive">
+          +{{ profitPercentage | number:'1.1-1' }}%
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">
+            Monthly capacity
+          </span>
+
+          <span class="stat-icon">◫</span>
+        </div>
+
+        <div class="stat-value">
+          {{ stats.monthlyCapacity | number:'1.2-2' }}
+          OMR
+        </div>
+
+        <div class="stat-delta muted">
+          Available each month
+        </div>
+      </div>
+
+    </div>
+
+    <div class="charts-row">
+
+      <div class="panel growth-panel">
+        <div class="panel-title">
+          Investment growth
+        </div>
+
+        <div class="panel-subtitle">
+          Portfolio value compared with contributions
+        </div>
+
+        <div class="chart-placeholder">
+          Chart will be connected later
+        </div>
+      </div>
+
+      <div class="panel allocation-panel">
+        <div class="panel-title">
+          Portfolio allocation
+        </div>
+
+        <div class="allocation-placeholder">
+          No portfolio allocation yet
+        </div>
+
+        <ul class="legend">
+          <li>
+            <span class="dot stock-dot"></span>
+            Stocks <b>40%</b>
+          </li>
+
+          <li>
+            <span class="dot gold-dot"></span>
+            Gold <b>30%</b>
+          </li>
+
+          <li>
+            <span class="dot fund-dot"></span>
+            Mutual funds <b>30%</b>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="bottom-row">
+
+      <div class="panel goal-panel">
+        <div class="panel-title">
+          {{ goal.goalName }}
+        </div>
+
+        <div class="goal-amount-row">
+          <div class="goal-amount">
+            {{ goal.currentAmount | number:'1.2-2' }}
+            OMR
+
+            <span class="goal-of">
+              of
+              {{ goal.targetAmount | number:'1.2-2' }}
+              OMR
+            </span>
+          </div>
+
+          <div class="goal-badge">
+            {{ goal.progressPercentage | number:'1.0-0' }}%
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div
+            class="progress-fill"
+            [style.width.%]="goal.progressPercentage"
+          ></div>
+        </div>
+
+        <div class="goal-footer">
+          <span class="on-track">
+            {{ goal.status }}
+          </span>
+
+          <span class="goal-estimate">
+            {{ goal.targetDate }}
+          </span>
+        </div>
+      </div>
+
+      <div class="panel ai-panel">
+        <div class="ai-label">
+          ✦ AI plan preview
+        </div>
+
+        <div class="ai-headline">
+          Balanced investment plan
+        </div>
+
+        <p class="ai-sub">
+          Based on your income and monthly investment capacity,
+          a balanced approach may help you reach your goal.
+        </p>
+
+        <div class="ai-split">
+
+          <div class="ai-split-item">
+            <div class="ai-split-value">
+              40%
+            </div>
+
+            <div class="ai-split-label">
+              Stocks
+            </div>
+          </div>
+
+          <div class="ai-split-item">
+            <div class="ai-split-value">
+              30%
+            </div>
+
+            <div class="ai-split-label">
+              Gold
+            </div>
+          </div>
+
+          <div class="ai-split-item">
+            <div class="ai-split-value">
+              30%
+            </div>
+
+            <div class="ai-split-label">
+              Funds
+            </div>
+          </div>
+
+        </div>
+
+        <div class="ai-disclaimer">
+          Estimates use historical patterns and are not guaranteed.
+          Markets can fall and you may lose money.
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>
