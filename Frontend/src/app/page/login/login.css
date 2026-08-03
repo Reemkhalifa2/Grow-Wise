@@ -353,6 +353,16 @@ form {
   background: var(--danger);
 }
 
+.login-error {
+  padding: 10px 12px;
+  border: 1px solid #f1b6b6;
+  border-radius: 10px;
+  background: #fff4f4;
+  color: #c53030;
+  font-size: 13px;
+  text-align: center;
+}
+
 @media (max-width: 460px) {
   .page {
     justify-content: flex-start;

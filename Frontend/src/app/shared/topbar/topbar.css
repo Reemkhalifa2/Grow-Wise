@@ -1,0 +1,59 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid #eaecf0;
+  background: #ffffff;
+}
+
+.topbar-date {
+  color: #7b8494;
+  font-size: 13.5px;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  color: #1a2233;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.user-role {
+  color: #7b8494;
+  font-size: 11.5px;
+  text-align: right;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eef0f3;
+  color: #1a2233;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 16px 20px;
+  }
+
+  .topbar-date {
+    display: none;
+  }
+
+  .topbar {
+    justify-content: flex-end;
+  }
+}

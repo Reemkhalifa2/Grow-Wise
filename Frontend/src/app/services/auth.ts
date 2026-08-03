@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { RegisterRequest } from '../models/register-request';
 import { LoginRequest } from '../models/auth.models';
-import { LoginResponse } from '../models/auth.models';
+import { AuthResponse } from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root',
@@ -15,29 +15,29 @@ export class Auth {
 
   constructor(private readonly http: HttpClient) {}
 
-  register(data: RegisterRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
+  register(data: RegisterRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
       `${this.apiUrl}/register`,
       data
     );
   }
 
-  login(data: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
+  login(data: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
       `${this.apiUrl}/login`,
       data
     );
   }
 
-  saveSession(response: LoginResponse): void {
+  saveSession(response: AuthResponse): void {
     if (response.token) {
       localStorage.setItem('token', response.token);
     }
 
-    if (response.userId != null) {
+    if (response.id != null) {
       localStorage.setItem(
-        'userId',
-        response.userId.toString()
+        'id',
+        response.id.toString()
       );
     }
 
@@ -58,9 +58,9 @@ export class Auth {
   }
 
   getUserId(): number | null {
-    const userId = localStorage.getItem('userId');
+    const id = localStorage.getItem('id');
 
-    return userId ? Number(userId) : null;
+    return id ? Number(id) : null;
   }
 
   getRole(): string | null {

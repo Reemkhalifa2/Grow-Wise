@@ -71,33 +71,36 @@ export class Login {
         })
       )
       .subscribe({
-        next: response => {
-          this.authService.saveSession(response);
+  next: response => {
 
-          if (
-            response.role?.toUpperCase() === 'ADMIN'
-          ) {
-            this.router.navigate([
-              '/admin-dashboard'
-            ]);
-          } else {
-            this.router.navigate([
-              '/dashboard'
-            ]);
-          }
-        },
+  console.log(response);
 
-        error: error => {
-          console.error(
-            'Login failed:',
-            error
-          );
+  this.authService.saveSession(response);
 
-          this.errorMessage =
-            error.error?.message ??
-            'Incorrect email or password.';
-        }
-      });
+  this.router.navigate(['/dashboard']);
+
+},
+
+  error: error => {
+    console.error('Login failed:', error);
+
+    if (error.status === 401) {
+      this.errorMessage =
+        'Incorrect email or password.';
+      return;
+    }
+
+    if (error.status === 0) {
+      this.errorMessage =
+        'Cannot connect to the server.';
+      return;
+    }
+
+    this.errorMessage =
+      error.error?.message ??
+      'Login failed. Please try again.';
+  }
+});
   }
 
   togglePassword(): void {

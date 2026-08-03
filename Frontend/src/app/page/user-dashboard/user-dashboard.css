@@ -1,0 +1,95 @@
+:host {
+  --bg: #f7f8fa;
+  --ink: #1a2233;
+  --muted: #7b8494;
+  --border: #eaecf0;
+  --green: #146a4f;
+  --green-dark: #0f5540;
+  --green-soft: #e9f3ef;
+  --gold: #e0b13e;
+  --funds: #5fbf9b;
+  --danger: #d64545;
+  --card-bg: #ffffff;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --shadow-card:
+    0 1px 2px rgba(16, 24, 40, 0.03),
+    0 4px 12px rgba(16, 24, 40, 0.04);
+  --font:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+.logout-button {
+  width: 100%;
+  margin-top: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--danger);
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background: #fff5f5;
+  border-color: #f4c4c4;
+}
+
+.loading-message {
+  padding: 30px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.chart-placeholder,
+.allocation-placeholder {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #fafbfc;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.stock-dot {
+  background: var(--green);
+}
+
+.gold-dot {
+  background: var(--gold);
+}
+
+.fund-dot {
+  background: var(--funds);
+}

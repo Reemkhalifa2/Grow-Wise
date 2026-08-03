@@ -3,9 +3,10 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
+export interface AuthResponse {
   token: string;
-  userId: number;
-  fullName?: string;
+  id: number;
+  email: string;
+  fullName: string;
   role: 'USER' | 'ADMIN' | string;
 }

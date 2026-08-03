@@ -223,7 +223,13 @@
         [disabled]="loading"
       >
         {{ loading ? 'Logging in...' : 'Log in' }}
+        
       </button>
+      @if (errorMessage) {
+  <div class="login-error">
+    {{ errorMessage }}
+  </div>
+}
     </form>
   </section>
 

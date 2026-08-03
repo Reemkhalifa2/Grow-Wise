@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import {
   LoginRequest,
-  LoginResponse
+  AuthResponse
 } from '../models/auth.models';
 
 @Injectable({
@@ -19,36 +19,32 @@ export class AuthService {
     private readonly http: HttpClient
   ) {}
 
-  login(request: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
+  login(request: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
       `${this.apiUrl}/login`,
       request
     );
   }
 
-  saveSession(response: LoginResponse): void {
-    localStorage.setItem(
-      'token',
-      response.token
-    );
+  saveSession(response: AuthResponse): void {
+  localStorage.setItem('token', response.token);
+  localStorage.setItem('role', response.role);
+  localStorage.setItem('email', response.email);
 
+  if (response.id != null) {
     localStorage.setItem(
       'userId',
-      response.userId.toString()
+      response.id.toString()
     );
-
-    localStorage.setItem(
-      'role',
-      response.role
-    );
-
-    if (response.fullName) {
-      localStorage.setItem(
-        'fullName',
-        response.fullName
-      );
-    }
   }
+
+  if (response.fullName) {
+    localStorage.setItem(
+      'fullName',
+      response.fullName
+    );
+  }
+}
 
   getToken(): string | null {
     return localStorage.getItem('token');
