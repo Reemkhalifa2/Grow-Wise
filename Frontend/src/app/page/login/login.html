@@ -1,0 +1,236 @@
+<div
+  class="toast"
+  [class.show]="toastMessage"
+  [class.error-toast]="toastIsError"
+>
+  {{ toastMessage }}
+</div>
+
+<main class="page">
+  <header class="brand">
+    <div class="brand-icon">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="12"
+          cy="8"
+          r="3.5"
+          stroke="white"
+          stroke-width="2"
+        />
+
+        <path
+          d="M5 20c0-4 3.1-7 7-7s7 3 7 7"
+          stroke="white"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    </div>
+
+    <h1>Welcome back</h1>
+    <p class="subtitle">
+      Log in to continue managing your investments
+    </p>
+  </header>
+
+  <section class="card">
+    <button
+      type="button"
+      class="btn-google"
+      (click)="continueWithGoogle()"
+      [disabled]="loading"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 48 48"
+        aria-hidden="true"
+      >
+        <path
+          fill="#FFC107"
+          d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.9 6 29.7 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"
+        />
+
+        <path
+          fill="#FF3D00"
+          d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.9 6 29.7 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+        />
+
+        <path
+          fill="#4CAF50"
+          d="M24 44c5.6 0 10.7-1.9 14.6-5.1l-6.7-5.7C29.8 34.9 27 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.6 39.6 16.3 44 24 44z"
+        />
+
+        <path
+          fill="#1976D2"
+          d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4 5.6l6.7 5.7C41.2 36.4 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"
+        />
+      </svg>
+
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <form
+      [formGroup]="loginForm"
+      (ngSubmit)="login()"
+      novalidate
+    >
+      <div class="field">
+        <label for="email">Email</label>
+
+        <div
+          class="input-wrap"
+          [class.error]="isInvalid('email')"
+        >
+          <svg
+            class="input-icon"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3 6.5L11.2 12.4C11.7 12.75 12.3 12.75 12.8 12.4L21 6.5"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <rect
+              x="3"
+              y="5"
+              width="18"
+              height="14"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+          </svg>
+
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="error-text">
+          @if (
+            loginForm.controls.email.touched &&
+            loginForm.controls.email.hasError('required')
+          ) {
+            Email is required.
+          } @else if (
+            loginForm.controls.email.touched &&
+            loginForm.controls.email.hasError('email')
+          ) {
+            Enter a valid email address.
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label-row">
+          <label for="password">Password</label>
+
+          <a
+            routerLink="/forgot-password"
+            class="forgot-link"
+          >
+            Forgot password?
+          </a>
+        </div>
+
+        <div
+          class="input-wrap"
+          [class.error]="isInvalid('password')"
+        >
+          <svg
+            class="input-icon"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect
+              x="5"
+              y="10"
+              width="14"
+              height="10"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+
+            <path
+              d="M8 10V7a4 4 0 018 0v3"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePassword()"
+            [attr.aria-label]="
+              showPassword ? 'Hide password' : 'Show password'
+            "
+          >
+            {{ showPassword ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+
+        <div class="error-text">
+          @if (
+            loginForm.controls.password.touched &&
+            loginForm.controls.password.hasError('required')
+          ) {
+            Password is required.
+          }
+        </div>
+      </div>
+
+      
+
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="loading"
+      >
+        {{ loading ? 'Logging in...' : 'Log in' }}
+      </button>
+    </form>
+  </section>
+
+  <p class="signup-row">
+    Don’t have an account?
+    <a routerLink="/register">
+      Create an account
+    </a>
+  </p>
+</main>

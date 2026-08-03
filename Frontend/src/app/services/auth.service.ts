@@ -2,48 +2,45 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { RegisterRequest } from '../models/register-request';
-import { LoginRequest } from '../models/auth.models';
-import { LoginResponse } from '../models/auth.models';
+import {
+  LoginRequest,
+  LoginResponse
+} from '../models/auth.models';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
-export class Auth {
+export class AuthService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/auth';
+  private readonly apiUrl =
+    'http://localhost:8080/api/auth';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient
+  ) {}
 
-  register(data: RegisterRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
-      `${this.apiUrl}/register`,
-      data
-    );
-  }
-
-  login(data: LoginRequest): Observable<LoginResponse> {
+  login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/login`,
-      data
+      request
     );
   }
 
   saveSession(response: LoginResponse): void {
-    if (response.token) {
-      localStorage.setItem('token', response.token);
-    }
+    localStorage.setItem(
+      'token',
+      response.token
+    );
 
-    if (response.userId != null) {
-      localStorage.setItem(
-        'userId',
-        response.userId.toString()
-      );
-    }
+    localStorage.setItem(
+      'userId',
+      response.userId.toString()
+    );
 
-    if (response.role) {
-      localStorage.setItem('role', response.role);
-    }
+    localStorage.setItem(
+      'role',
+      response.role
+    );
 
     if (response.fullName) {
       localStorage.setItem(
@@ -60,7 +57,9 @@ export class Auth {
   getUserId(): number | null {
     const userId = localStorage.getItem('userId');
 
-    return userId ? Number(userId) : null;
+    return userId
+      ? Number(userId)
+      : null;
   }
 
   getRole(): string | null {
@@ -68,7 +67,7 @@ export class Auth {
   }
 
   isLoggedIn(): boolean {
-    return this.getToken() !== null;
+    return Boolean(this.getToken());
   }
 
   isAdmin(): boolean {
