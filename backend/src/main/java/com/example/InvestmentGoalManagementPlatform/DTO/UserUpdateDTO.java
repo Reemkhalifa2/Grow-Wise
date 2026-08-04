@@ -29,8 +29,6 @@ public class UserUpdateDTO {
     )
     private Integer monthlyExpenses;
 
-
-
     public User toEntity() {
 
         User user = new User();
