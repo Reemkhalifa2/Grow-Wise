@@ -9,190 +9,115 @@
 <main class="page">
 
   <header class="page-header">
-    <span class="eyebrow">Asset catalog</span>
-    <h1>Asset management</h1>
-    <p class="subtitle">
-      Create, review, and control the assets available to recommendation plans.
-    </p>
-  </header>
+    <div>
+      <span class="section-label">
+        Market discovery
+      </span>
 
-  <!-- Add / edit form -->
-  <form
-    class="form-card"
-    [formGroup]="assetForm"
-    (ngSubmit)="submit()"
-    novalidate
-  >
-    <div class="form-row">
-      <div class="field">
-        <input
-          type="text"
-          formControlName="name"
-          placeholder="Asset name"
-          [class.error]="assetForm.controls.name.invalid && assetForm.controls.name.touched"
-        />
-      </div>
+      <h1>Available investment assets</h1>
 
-      <div class="field">
-        <input
-          type="text"
-          formControlName="symbol"
-          placeholder="Symbol"
-          [class.error]="assetForm.controls.symbol.invalid && assetForm.controls.symbol.touched"
-        />
-      </div>
-
-      <div class="field">
-        <select formControlName="assetType">
-          @for (type of assetTypes; track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="field">
-        <select formControlName="riskLevel">
-          @for (level of riskLevels; track level) {
-            <option [value]="level">{{ level }}</option>
-          }
-        </select>
-      </div>
-
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="saving"
-      >
-        {{ editingId ? 'Save' : '+ Add' }}
-      </button>
-
-      @if (editingId) {
-        <button
-          type="button"
-          class="btn-secondary"
-          (click)="cancelEdit()"
-        >
-          Cancel
-        </button>
-      }
+      <p class="subtitle">
+        View the assets currently available for investment recommendations.
+      </p>
     </div>
 
     <button
       type="button"
-      class="more-details-toggle"
-      (click)="toggleMoreDetails()"
+      class="btn-secondary"
+      (click)="refreshDiscovery()"
+      [disabled]="loading"
     >
-      {{ showMoreDetails ? 'Hide details' : 'More details (required for scraping)' }}
+      {{ loading ? 'Refreshing...' : 'Refresh assets' }}
     </button>
+  </header>
 
-    @if (showMoreDetails) {
-      <div class="form-row details-row">
-        <div class="field">
-          <label>Scraping URL</label>
-          <input
-            type="text"
-            formControlName="scrapingUrl"
-            placeholder="https://example.com/quote/AAPL"
-            [class.error]="assetForm.controls.scrapingUrl.invalid && assetForm.controls.scrapingUrl.touched"
-          />
-        </div>
+  <section class="assets-section">
 
-        <div class="field">
-          <label>CSS selector</label>
-          <input
-            type="text"
-            formControlName="cssSelector"
-            placeholder=".price-value"
-            [class.error]="assetForm.controls.cssSelector.invalid && assetForm.controls.cssSelector.touched"
-          />
-        </div>
+    <div class="section-header">
+      <div>
+        <h2>Discovered assets</h2>
 
-        <div class="field">
-          <label>Current price</label>
-          <input
-            type="number"
-            step="0.01"
-            formControlName="currentPrice"
-          />
-        </div>
+        <p>
+          Prices are loaded from the configured market sources.
+        </p>
+      </div>
 
-        <div class="field checkbox-field">
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              formControlName="autoUpdate"
-            />
-            Auto-update price
-          </label>
+      <span class="count-badge">
+        {{ discoveredAssets.length }}
+      </span>
+    </div>
+
+    @if (loading) {
+      <div class="state-card">
+        Loading market assets...
+      </div>
+    } @else if (discoveredAssets.length === 0) {
+      <div class="state-card">
+        No market assets were found.
+      </div>
+    } @else {
+      <div class="table-card">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Currency</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (
+                discoveredAsset of discoveredAssets;
+                track discoveredAsset.symbol
+              ) {
+                <tr>
+                  <td>
+                    <div class="asset-name">
+                      {{ discoveredAsset.name }}
+                    </div>
+
+                    <div class="asset-symbol">
+                      {{ discoveredAsset.symbol }}
+                    </div>
+                  </td>
+
+                  <td>
+                    <span class="badge badge-type">
+                      {{ discoveredAsset.assetType }}
+                    </span>
+                  </td>
+
+                  <td>
+                    @if (
+                      discoveredAsset.currentPrice !== null &&
+                      discoveredAsset.currentPrice !== undefined &&
+                      discoveredAsset.currentPrice > 0
+                    ) {
+                      {{ discoveredAsset.currentPrice | number:'1.3-3' }}
+                    } @else {
+                      <span class="price-unavailable">
+                        Not available
+                      </span>
+                    }
+                  </td>
+
+                  <td>
+                   OMR
+                  </td>
+
+                  
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
     }
-  </form>
 
-  <!-- Table -->
-  @if (loading) {
-    <div class="state-card">Loading assets…</div>
-  } @else if (assets.length === 0) {
-    <div class="state-card">No assets yet. Add your first one above.</div>
-  } @else {
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>Asset</th>
-            <th>Type</th>
-            <th>Risk</th>
-            <th>Price</th>
-            <th>Auto-update</th>
-            <th class="actions-col">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (asset of assets; track asset.id) {
-            <tr>
-              <td>
-                <div class="asset-name">{{ asset.name }}</div>
-                <div class="asset-symbol">{{ asset.symbol }}</div>
-              </td>
-              <td>
-                <span class="badge badge-type">{{ asset.assetType }}</span>
-              </td>
-              <td>
-                <span
-                  class="badge"
-                  [class.badge-risk-low]="asset.riskLevel === 'LOW'"
-                  [class.badge-risk-medium]="asset.riskLevel === 'MEDIUM'"
-                  [class.badge-risk-high]="asset.riskLevel === 'HIGH'"
-                >
-                  {{ asset.riskLevel }}
-                </span>
-              </td>
-              <td>{{ asset.currentPrice | currency:'USD':'symbol':'1.2-2' }}</td>
-              <td>{{ asset.autoUpdate ? 'On' : 'Off' }}</td>
-              <td class="actions-col">
-                <button
-                  type="button"
-                  class="icon-btn"
-                  title="Edit"
-                  (click)="startEdit(asset)"
-                >
-                  ✎
-                </button>
-                <button
-                  type="button"
-                  class="icon-btn icon-btn-danger"
-                  title="Delete"
-                  (click)="confirmDelete(asset)"
-                >
-                  🗑
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+  </section>
 
 </main>
+
