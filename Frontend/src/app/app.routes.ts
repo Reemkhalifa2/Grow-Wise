@@ -7,7 +7,7 @@ import { FinancialProfile } from './page/financial-profile/financial-profile';
 import { AdminDashboard } from './page/dashboard/dashboard';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { AssetManagement } from './page/asset-management/asset-management';
-
+import { FinancialGoal } from './page/investment-goal/investment-goal';
 import { authGuard } from './authGuard'; // <-- Add this
 
 export const routes: Routes = [
@@ -40,6 +40,10 @@ export const routes: Routes = [
       {
         path: 'assets',
         component: AssetManagement
+      },
+      {
+        path: 'financial-goal',
+        component: FinancialGoal
       },
       {
         path: '',
