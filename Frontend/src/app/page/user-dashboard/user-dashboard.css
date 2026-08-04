@@ -1,95 +1,149 @@
 :host {
-  --bg: #f7f8fa;
-  --ink: #1a2233;
-  --muted: #7b8494;
-  --border: #eaecf0;
-  --green: #146a4f;
-  --green-dark: #0f5540;
-  --green-soft: #e9f3ef;
-  --gold: #e0b13e;
-  --funds: #5fbf9b;
-  --danger: #d64545;
-  --card-bg: #ffffff;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --shadow-card:
+  display: block;
+}
+
+.dashboard {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.dashboard-header {
+  margin-bottom: 26px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: #146a4f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  color: #1a2233;
+  font-size: 28px;
+}
+
+.dashboard-header p {
+  margin: 8px 0 0;
+  color: #7b8494;
+  font-size: 14px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card,
+.profile-card,
+.state-card {
+  padding: 20px;
+  border: 1px solid #eaecf0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
     0 1px 2px rgba(16, 24, 40, 0.03),
     0 4px 12px rgba(16, 24, 40, 0.04);
-  --font:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
-
-  display: block;
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font);
 }
 
-body {
-  margin: 0;
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--ink);
-}
-
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-}
-
-.logout-button {
-  width: 100%;
-  margin-top: auto;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #ffffff;
-  color: var(--danger);
-  font-family: var(--font);
-  font-size: 13.5px;
+.stat-label {
+  margin-bottom: 14px;
+  color: #7b8494;
+  font-size: 13px;
   font-weight: 600;
+}
+
+.stat-value {
+  margin-bottom: 5px;
+  color: #1a2233;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.stat-description {
+  color: #7b8494;
+  font-size: 12px;
+}
+
+.stat-description.positive {
+  color: #146a4f;
+  font-weight: 700;
+}
+
+.profile-card h2 {
+  margin: 0 0 20px;
+  color: #146a4f;
+  font-size: 16px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.profile-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-grid span {
+  color: #7b8494;
+  font-size: 12px;
+}
+
+.profile-grid strong {
+  color: #1a2233;
+  font-size: 14px;
+}
+
+.state-card {
+  color: #7b8494;
+  text-align: center;
+}
+
+.error-state {
+  color: #c53030;
+}
+
+.error-state button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #146a4f;
+  color: #ffffff;
   cursor: pointer;
 }
 
-.logout-button:hover {
-  background: #fff5f5;
-  border-color: #f4c4c4;
+@media (max-width: 1000px) {
+  .stats-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
 }
 
-.loading-message {
-  padding: 30px;
-  text-align: center;
-  color: var(--muted);
-}
+@media (max-width: 600px) {
+  .dashboard {
+    padding: 20px;
+  }
 
-.chart-placeholder,
-.allocation-placeholder {
-  min-height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-  background: #fafbfc;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.stock-dot {
-  background: var(--green);
-}
-
-.gold-dot {
-  background: var(--gold);
-}
-
-.fund-dot {
-  background: var(--funds);
+  .stats-grid,
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
 }

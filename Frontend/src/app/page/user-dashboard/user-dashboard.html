@@ -1,249 +1,177 @@
-<div class="content">
+<section class="dashboard">
 
   @if (loading) {
-    <div class="loading-message">
+    <div class="state-card">
       Loading dashboard...
     </div>
   } @else if (errorMessage) {
-    <div class="dashboard-error">
-      {{ errorMessage }}
+    <div class="state-card error-state">
+      <p>{{ errorMessage }}</p>
+
+      <button
+        type="button"
+        (click)="retry()"
+      >
+        Try again
+      </button>
     </div>
   } @else {
 
-    <div class="eyebrow">
-      Your wealth plan
-    </div>
+    <header class="dashboard-header">
+      <div class="eyebrow">
+        Your wealth plan
+      </div>
 
-    <h1 class="greeting">
-      {{ greeting }}
-    </h1>
+      <h1>
+        {{ greeting }}
+      </h1>
 
-    <p class="greeting-sub">
-      Your investments are moving steadily toward your goal.
-    </p>
+      <p>
+        Here is your current financial overview.
+      </p>
+    </header>
 
     <div class="stats-grid">
 
-      <div class="stat-card">
-        <div class="stat-top">
-          <span class="stat-label">
-            Total invested
-          </span>
-
-          <span class="stat-icon">$</span>
+      <article class="stat-card">
+        <div class="stat-label">
+          Total invested
         </div>
 
         <div class="stat-value">
-          {{ stats.totalInvested | number:'1.2-2' }}
+          {{
+            summary.totalInvested
+              | number:'1.2-2'
+          }}
           OMR
         </div>
 
-        <div class="stat-delta positive">
+        <div class="stat-description">
           Total contributions
         </div>
-      </div>
+      </article>
 
-      <div class="stat-card">
-        <div class="stat-top">
-          <span class="stat-label">
-            Portfolio value
-          </span>
-
-          <span class="stat-icon">↗</span>
+      <article class="stat-card">
+        <div class="stat-label">
+          Portfolio value
         </div>
 
         <div class="stat-value">
-          {{ stats.portfolioValue | number:'1.2-2' }}
+          {{
+            summary.portfolioValue
+              | number:'1.2-2'
+          }}
           OMR
         </div>
 
-        <div class="stat-delta positive">
+        <div class="stat-description">
           Current estimated value
         </div>
-      </div>
+      </article>
 
-      <div class="stat-card">
-        <div class="stat-top">
-          <span class="stat-label">
-            Total profit
-          </span>
-
-          <span class="stat-icon">+</span>
+      <article class="stat-card">
+        <div class="stat-label">
+          Total profit
         </div>
 
         <div class="stat-value">
-          {{ stats.totalProfit | number:'1.2-2' }}
+          {{
+            summary.totalProfit
+              | number:'1.2-2'
+          }}
           OMR
         </div>
 
-        <div class="stat-delta positive">
-          +{{ profitPercentage | number:'1.1-1' }}%
+        <div class="stat-description positive">
+          +{{
+            profitPercentage
+              | number:'1.1-1'
+          }}%
         </div>
-      </div>
+      </article>
 
-      <div class="stat-card">
-        <div class="stat-top">
-          <span class="stat-label">
-            Monthly capacity
-          </span>
-
-          <span class="stat-icon">◫</span>
+      <article class="stat-card">
+        <div class="stat-label">
+          Monthly capacity
         </div>
 
         <div class="stat-value">
-          {{ stats.monthlyCapacity | number:'1.2-2' }}
+          {{
+            summary.monthlyCapacity
+              | number:'1.2-2'
+          }}
           OMR
         </div>
 
-        <div class="stat-delta muted">
+        <div class="stat-description">
           Available each month
         </div>
-      </div>
+      </article>
 
     </div>
 
-    <div class="charts-row">
+    @if (profile) {
+      <section class="profile-card">
+        <h2>Financial profile</h2>
 
-      <div class="panel growth-panel">
-        <div class="panel-title">
-          Investment growth
-        </div>
+        <div class="profile-grid">
+          <div>
+            <span>Name</span>
+            <strong>
+              {{ profile.fullName }}
+            </strong>
+          </div>
 
-        <div class="panel-subtitle">
-          Portfolio value compared with contributions
-        </div>
+          <div>
+            <span>Email</span>
+            <strong>
+              {{ profile.email }}
+            </strong>
+          </div>
 
-        <div class="chart-placeholder">
-          Chart will be connected later
-        </div>
-      </div>
-
-      <div class="panel allocation-panel">
-        <div class="panel-title">
-          Portfolio allocation
-        </div>
-
-        <div class="allocation-placeholder">
-          No portfolio allocation yet
-        </div>
-
-        <ul class="legend">
-          <li>
-            <span class="dot stock-dot"></span>
-            Stocks <b>40%</b>
-          </li>
-
-          <li>
-            <span class="dot gold-dot"></span>
-            Gold <b>30%</b>
-          </li>
-
-          <li>
-            <span class="dot fund-dot"></span>
-            Mutual funds <b>30%</b>
-          </li>
-        </ul>
-      </div>
-
-    </div>
-
-    <div class="bottom-row">
-
-      <div class="panel goal-panel">
-        <div class="panel-title">
-          {{ goal.goalName }}
-        </div>
-
-        <div class="goal-amount-row">
-          <div class="goal-amount">
-            {{ goal.currentAmount | number:'1.2-2' }}
-            OMR
-
-            <span class="goal-of">
-              of
-              {{ goal.targetAmount | number:'1.2-2' }}
+          <div>
+            <span>Monthly salary</span>
+            <strong>
+              {{
+                profile.monthlySalary
+                  | number:'1.2-2'
+              }}
               OMR
-            </span>
+            </strong>
           </div>
 
-          <div class="goal-badge">
-            {{ goal.progressPercentage | number:'1.0-0' }}%
-          </div>
-        </div>
-
-        <div class="progress-track">
-          <div
-            class="progress-fill"
-            [style.width.%]="goal.progressPercentage"
-          ></div>
-        </div>
-
-        <div class="goal-footer">
-          <span class="on-track">
-            {{ goal.status }}
-          </span>
-
-          <span class="goal-estimate">
-            {{ goal.targetDate }}
-          </span>
-        </div>
-      </div>
-
-      <div class="panel ai-panel">
-        <div class="ai-label">
-          ✦ AI plan preview
-        </div>
-
-        <div class="ai-headline">
-          Balanced investment plan
-        </div>
-
-        <p class="ai-sub">
-          Based on your income and monthly investment capacity,
-          a balanced approach may help you reach your goal.
-        </p>
-
-        <div class="ai-split">
-
-          <div class="ai-split-item">
-            <div class="ai-split-value">
-              40%
-            </div>
-
-            <div class="ai-split-label">
-              Stocks
-            </div>
+          <div>
+            <span>Monthly expenses</span>
+            <strong>
+              {{
+                profile.monthlyExpenses
+                  | number:'1.2-2'
+              }}
+              OMR
+            </strong>
           </div>
 
-          <div class="ai-split-item">
-            <div class="ai-split-value">
-              30%
-            </div>
-
-            <div class="ai-split-label">
-              Gold
-            </div>
+          <div>
+            <span>Saving capacity</span>
+            <strong>
+              {{
+                profile.savingCapacity
+                  | number:'1.2-2'
+              }}
+              OMR
+            </strong>
           </div>
 
-          <div class="ai-split-item">
-            <div class="ai-split-value">
-              30%
-            </div>
-
-            <div class="ai-split-label">
-              Funds
-            </div>
+          <div>
+            <span>Role</span>
+            <strong>
+              {{ profile.role }}
+            </strong>
           </div>
-
         </div>
+      </section>
+    }
 
-        <div class="ai-disclaimer">
-          Estimates use historical patterns and are not guaranteed.
-          Markets can fall and you may lose money.
-        </div>
-      </div>
-
-    </div>
   }
 
-</div>
+</section>
