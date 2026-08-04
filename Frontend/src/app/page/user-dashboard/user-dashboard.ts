@@ -1,79 +1,64 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
 import {
-  Router,
-  RouterLink,
-  RouterLinkActive
-} from '@angular/router';
-import { forkJoin, finalize } from 'rxjs';
+  Component,
+  inject,
+  OnInit
+} from '@angular/core';
+import { Router } from '@angular/router';
+import {
+  finalize,
+  forkJoin
+} from 'rxjs';
 
 import { Auth } from '../../services/auth';
-import { DashboardService } from '../../services/user-dashboard';
+import {
+  DashboardService
+} from '../../services/user-dashboard';
 
 import {
   FinancialSummary,
-  UserProfile,
-  FinancialGoal
+  UserProfile
 } from '../../models/userDashboard.models';
 
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterLink,
-    RouterLinkActive
+    CommonModule
   ],
   templateUrl: './user-dashboard.html',
   styleUrl: './user-dashboard.css'
 })
-export class Dashboard implements OnInit {
+export class UserDashboard implements OnInit {
 
-  private readonly authService = inject(Auth);
+  private readonly authService =
+    inject(Auth);
+
   private readonly dashboardService =
     inject(DashboardService);
-  private readonly router = inject(Router);
+
+  private readonly router =
+    inject(Router);
 
   loading = true;
   errorMessage = '';
 
-  fullName = '';
-  role = '';
-  initials = '';
-  currentDate = '';
-
   profile: UserProfile | null = null;
 
-  stats: FinancialSummary = {
+  summary: FinancialSummary = {
     totalInvested: 0,
     portfolioValue: 0,
     totalProfit: 0,
     monthlyCapacity: 0
   };
 
-  goal: FinancialGoal = {
-  goalName: 'No active goal',
-  currentAmount: 0,
-  targetAmount: 0,
-  progressPercentage: 0,
-  status: 'NOT_STARTED',
-  targetDate: ''
-};
-
   ngOnInit(): void {
-    this.currentDate =
-      new Intl.DateTimeFormat('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      }).format(new Date());
-
     this.loadDashboard();
   }
 
   private loadDashboard(): void {
-    const userId = this.authService.getUserId();
+    const userId =
+      this.authService.getUserId();
 
     if (userId === null) {
       this.authService.logout();
@@ -86,7 +71,8 @@ export class Dashboard implements OnInit {
 
     forkJoin({
       profile:
-        this.dashboardService.getProfile(userId),
+        this.dashboardService
+          .getProfile(userId),
 
       summary:
         this.dashboardService
@@ -100,87 +86,99 @@ export class Dashboard implements OnInit {
       .subscribe({
         next: result => {
           this.profile = result.profile;
-          this.stats = result.summary;
+          this.summary = result.summary;
 
-          this.fullName =
-            result.profile.fullName;
+          console.log(
+            'Profile:',
+            result.profile
+          );
 
-          this.role =
-            result.profile.role;
-
-          this.initials =
-            this.getInitials(
-              result.profile.fullName
-            );
+          console.log(
+            'Financial summary:',
+            result.summary
+          );
         },
 
         error: error => {
           console.error(
-            'Dashboard loading failed:',
+            'Dashboard request failed:',
             error
           );
 
-          if (error.status === 401 ||
-              error.status === 403) {
+          if (error.status === 401) {
+            this.errorMessage =
+              'Your session has expired. Please log in again.';
+
             this.authService.logout();
-            this.router.navigate(['/login']);
+
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 1000);
+
+            return;
+          }
+
+          if (error.status === 403) {
+            this.errorMessage =
+              'You do not have permission to view this dashboard.';
+
+            return;
+          }
+
+          if (error.status === 0) {
+            this.errorMessage =
+              'Cannot connect to the backend server.';
+
             return;
           }
 
           this.errorMessage =
             error.error?.message ??
-            'Failed to load dashboard information.';
+            'Failed to load dashboard.';
         }
       });
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  get firstName(): string {
+    if (!this.profile?.fullName) {
+      return 'User';
+    }
+
+    return (
+      this.profile.fullName
+        .split(' ')[0] || 'User'
+    );
   }
 
   get greeting(): string {
-    const firstName =
-      this.fullName.split(' ')[0] || 'User';
-
-    const hour = new Date().getHours();
+    const hour =
+      new Date().getHours();
 
     if (hour < 12) {
-      return `Good morning, ${firstName}`;
+      return `Good morning, ${this.firstName}`;
     }
 
     if (hour < 18) {
-      return `Good afternoon, ${firstName}`;
+      return `Good afternoon, ${this.firstName}`;
     }
 
-    return `Good evening, ${firstName}`;
-  }
-
-  get isAdmin(): boolean {
-    return this.role.toUpperCase() === 'ADMIN';
+    return `Good evening, ${this.firstName}`;
   }
 
   get profitPercentage(): number {
-    if (this.stats.totalInvested === 0) {
+    if (
+      this.summary.totalInvested === 0
+    ) {
       return 0;
     }
 
     return (
-      this.stats.totalProfit /
-      this.stats.totalInvested
+      this.summary.totalProfit /
+      this.summary.totalInvested
     ) * 100;
   }
 
-  private getInitials(
-    fullName: string
-  ): string {
-    return fullName
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map(name =>
-        name.charAt(0).toUpperCase()
-      )
-      .join('');
+  retry(): void {
+    this.loadDashboard();
   }
 }

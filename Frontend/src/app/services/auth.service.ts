@@ -33,7 +33,7 @@ export class AuthService {
 
   if (response.id != null) {
     localStorage.setItem(
-      'userId',
+      'id',
       response.id.toString()
     );
   }
@@ -51,7 +51,7 @@ export class AuthService {
   }
 
   getUserId(): number | null {
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem('id');
 
     return userId
       ? Number(userId)

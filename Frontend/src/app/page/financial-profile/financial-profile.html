@@ -1,0 +1,132 @@
+<section class="financial-profile-page">
+
+  <div class="page-heading">
+    <p class="eyebrow">
+      Planning inputs
+    </p>
+
+    <h1>
+      Financial profile
+    </h1>
+
+    <p class="page-description">
+      These details shape your capacity, timeline,
+      and investment mix.
+    </p>
+  </div>
+
+  @if (isLoading) {
+    <div class="message-card">
+      Loading financial profile...
+    </div>
+  }
+
+  @if (successMessage) {
+    <div class="message-card success">
+      {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="message-card error">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <form
+    class="profile-panel"
+    [formGroup]="profileForm"
+    (ngSubmit)="saveProfile()">
+
+    <div class="profile-grid">
+
+      <div class="profile-field">
+        <label for="monthlySalary">
+          Monthly salary
+        </label>
+
+        <div class="input-wrap prefix-input">
+          <span class="input-prefix">
+            OMR
+          </span>
+
+          <input
+            id="monthlySalary"
+            type="number"
+            min="0"
+            step="0.001"
+            formControlName="monthlySalary"
+            placeholder="0.000">
+        </div>
+
+        @if (
+          profileForm.get('monthlySalary')?.touched &&
+          profileForm.get('monthlySalary')?.invalid
+        ) {
+          <small class="validation-error">
+            Enter a valid monthly salary.
+          </small>
+        }
+      </div>
+
+      <div class="profile-field">
+        <label for="monthlyExpenses">
+          Monthly expenses
+        </label>
+
+        <div class="input-wrap prefix-input">
+          <span class="input-prefix">
+            OMR
+          </span>
+
+          <input
+            id="monthlyExpenses"
+            type="number"
+            min="0"
+            step="0.001"
+            formControlName="monthlyExpenses"
+            placeholder="0.000">
+        </div>
+
+        @if (
+          profileForm.get('monthlyExpenses')?.touched &&
+          profileForm.get('monthlyExpenses')?.invalid
+        ) {
+          <small class="validation-error">
+            Enter valid monthly expenses.
+          </small>
+        }
+      </div>
+
+      <div class="profile-field">
+        <label for="currentSavings">
+          Current savings
+        </label>
+
+    
+
+        @if (
+          profileForm.get('desiredSavingAmount')?.touched &&
+          profileForm.get('desiredSavingAmount')?.invalid
+        ) {
+          <small class="validation-error">
+            Enter the amount you want to save.
+          </small>
+        }
+      </div>
+
+
+    </div>
+
+    <button
+      type="submit"
+      class="save-button"
+      >
+
+        Save financial profile
+      
+    </button>
+
+  </form>
+
+</section>
