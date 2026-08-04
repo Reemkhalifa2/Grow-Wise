@@ -12,6 +12,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/investment-plans")
+@CrossOrigin(origins = "http://localhost:4200")
+
 public class InvestmentPlanController {
 
     private final InvestmentPlanService investmentPlanService;
