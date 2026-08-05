@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  inject,
+  OnInit
+} from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { AssetService } from '../../services/assets';
@@ -20,6 +25,7 @@ import {
 export class AssetManagement implements OnInit {
 
   private readonly assetService = inject(AssetService);
+  private readonly cdr = inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
 
   discoveredAssets: MarketDiscovery[] = [];
 
@@ -43,11 +49,13 @@ export class AssetManagement implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
+          this.cdr.detectChanges(); // 2. Trigger change detection when loading finishes
         })
       )
       .subscribe({
         next: assets => {
           this.discoveredAssets = assets;
+          this.cdr.detectChanges(); // 3. Ensure component updates UI immediately
         },
 
         error: error => {
@@ -60,6 +68,8 @@ export class AssetManagement implements OnInit {
             'Failed to discover assets.',
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -77,12 +87,14 @@ export class AssetManagement implements OnInit {
     }
 
     this.addingSymbols.add(asset.symbol);
+    this.cdr.detectChanges(); // 4. Instantly reflect loading state on button click
 
     this.assetService
       .addToCatalog(asset, riskLevel)
       .pipe(
         finalize(() => {
           this.addingSymbols.delete(asset.symbol);
+          this.cdr.detectChanges(); // 5. Clear per-item loading state
         })
       )
       .subscribe({
@@ -93,6 +105,8 @@ export class AssetManagement implements OnInit {
             `${createdAsset.name} added to catalog.`,
             false
           );
+
+          this.cdr.detectChanges(); // 6. Reflect "Added" status immediately
         },
 
         error: error => {
@@ -106,6 +120,8 @@ export class AssetManagement implements OnInit {
             `Failed to add ${asset.name}.`,
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -136,10 +152,12 @@ export class AssetManagement implements OnInit {
   ): void {
     this.toastMessage = message;
     this.toastIsError = isError;
+    this.cdr.detectChanges(); // 7. Guarantee toast displays instantly
 
     window.setTimeout(() => {
       this.toastMessage = '';
       this.toastIsError = false;
+      this.cdr.detectChanges(); // 8. Update view when toast expires
     }, 4000);
   }
 }

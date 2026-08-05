@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   inject,
   OnInit
@@ -47,6 +48,9 @@ export class InvestmentPlan implements OnInit {
 
   private readonly investmentGoalService =
     inject(investmentGoalService);
+
+  private readonly cdr =
+    inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
 
   userId = 0;
 
@@ -104,6 +108,7 @@ export class InvestmentPlan implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
+          this.cdr.detectChanges(); // 2. Ensure loading state clears in UI
         })
       )
       .subscribe({
@@ -114,6 +119,8 @@ export class InvestmentPlan implements OnInit {
           if (this.goals.length > 0) {
             this.selectGoal(this.goals[0].id);
           }
+
+          this.cdr.detectChanges(); // 3. Update view with loaded data
         },
 
         error: error => {
@@ -127,6 +134,8 @@ export class InvestmentPlan implements OnInit {
             'Failed to load investment plan data.',
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -148,6 +157,8 @@ export class InvestmentPlan implements OnInit {
 
     this.planType = 'MANUAL';
     this.aiExplanation = '';
+    
+    this.cdr.detectChanges();
   }
 
   private createDefaultAllocations(
@@ -249,6 +260,7 @@ export class InvestmentPlan implements OnInit {
       .pipe(
         finalize(() => {
           this.aiLoading = false;
+          this.cdr.detectChanges(); // 4. Clear AI loading state in view
         })
       )
       .subscribe({
@@ -274,6 +286,8 @@ export class InvestmentPlan implements OnInit {
             'AI allocation applied.',
             false
           );
+
+          this.cdr.detectChanges(); // 5. Render updated AI allocations immediately
         },
 
         error: error => {
@@ -287,6 +301,8 @@ export class InvestmentPlan implements OnInit {
             'AI could not generate an allocation.',
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -364,6 +380,7 @@ export class InvestmentPlan implements OnInit {
       .pipe(
         finalize(() => {
           this.saving = false;
+          this.cdr.detectChanges(); // 6. Clear saving state in view
         })
       )
       .subscribe({
@@ -377,6 +394,8 @@ export class InvestmentPlan implements OnInit {
             'Investment plan saved successfully.',
             false
           );
+
+          this.cdr.detectChanges();
         },
 
         error: error => {
@@ -390,6 +409,8 @@ export class InvestmentPlan implements OnInit {
             'Failed to save investment plan.',
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -400,10 +421,12 @@ export class InvestmentPlan implements OnInit {
   ): void {
     this.toastMessage = message;
     this.toastIsError = isError;
+    this.cdr.detectChanges(); // 7. Guarantee toast displays instantly
 
     window.setTimeout(() => {
       this.toastMessage = '';
       this.toastIsError = false;
+      this.cdr.detectChanges(); // 8. Update view when toast clears
     }, 4000);
   }
 }

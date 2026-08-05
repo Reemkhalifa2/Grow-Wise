@@ -1,149 +1,271 @@
 :host {
   display: block;
+  background: #f4f6f9;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .dashboard {
-  width: 100%;
-  max-width: 1180px;
+  width:80%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px;
+  padding: 36px 24px;
 }
 
+/* Header Section */
 .dashboard-header {
-  margin-bottom: 26px;
+  margin-bottom: 32px;
+  position: relative;
 }
 
 .eyebrow {
-  margin-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(20, 106, 79, 0.1);
   color: #146a4f;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .dashboard-header h1 {
   margin: 0;
-  color: #1a2233;
-  font-size: 28px;
+  color: #0f172a;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .dashboard-header p {
   margin: 8px 0 0;
-  color: #7b8494;
-  font-size: 14px;
+  color: #64748b;
+  font-size: 15px;
 }
 
+/* Stats Grid Layout */
 .stats-grid {
   display: grid;
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
 }
 
+/* Base Card Redesign */
 .stat-card,
 .profile-card,
 .state-card {
-  padding: 20px;
-  border: 1px solid #eaecf0;
-  border-radius: 16px;
+  position: relative;
   background: #ffffff;
-  box-shadow:
-    0 1px 2px rgba(16, 24, 40, 0.03),
-    0 4px 12px rgba(16, 24, 40, 0.04);
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Card Hover Micro-interactions */
+.stat-card:hover,
+.profile-card:hover {
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12);
+}
+
+/* Stat Cards Specific Styling */
+.stat-card {
+  padding: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Glowing Top Accent Bar */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #146a4f, #34d399);
 }
 
 .stat-label {
-  margin-bottom: 14px;
-  color: #7b8494;
-  font-size: 13px;
-  font-weight: 600;
+  margin-bottom: 12px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .stat-value {
-  margin-bottom: 5px;
-  color: #1a2233;
-  font-size: 22px;
+  margin-bottom: 10px;
+  color: #0f172a;
+  font-size: 20px;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 .stat-description {
-  color: #7b8494;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
 .stat-description.positive {
   color: #146a4f;
+  background: rgba(20, 106, 79, 0.08);
+  padding: 4px 8px;
+  border-radius: 6px;
   font-weight: 700;
+  width: fit-content;
+}
+
+.stat-description.negative {
+  color: #e11d48;
+  background: rgba(225, 29, 72, 0.08);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+/* Profile Section Styling */
+.profile-card {
+  padding: 28px;
+  margin-bottom: 28px;
 }
 
 .profile-card h2 {
-  margin: 0 0 20px;
-  color: #146a4f;
-  font-size: 16px;
+  margin: 0 0 24px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-card h2::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 20px;
+  background: #146a4f;
+  border-radius: 4px;
 }
 
 .profile-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .profile-grid div {
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.profile-grid div:hover {
+  background: #f1f5f9;
 }
 
 .profile-grid span {
-  color: #7b8494;
-  font-size: 12px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .profile-grid strong {
-  color: #1a2233;
-  font-size: 14px;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
 }
 
+/* Loading & Error States */
 .state-card {
-  color: #7b8494;
+  padding: 60px 24px;
   text-align: center;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .error-state {
-  color: #c53030;
+  border-color: #fecaca;
+  background: #fff5f5;
+  color: #991b1b;
+}
+
+.error-state p {
+  margin: 0 0 20px;
+  font-size: 15px;
 }
 
 .error-state button {
-  padding: 10px 16px;
+  padding: 12px 28px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #146a4f;
   color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(20, 106, 79, 0.3);
+  transition: all 0.2s ease;
 }
 
-@media (max-width: 1000px) {
+.error-state button:hover {
+  background: #0e4d39;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 106, 79, 0.4);
+}
+
+.error-state button:active {
+  transform: translateY(0);
+}
+
+/* Responsive Breakdown */
+@media (max-width: 1024px) {
   .stats-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .profile-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .dashboard {
-    padding: 20px;
+    padding: 24px 16px;
   }
 
   .stats-grid,
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-header h1 {
+    font-size: 26px;
   }
 }

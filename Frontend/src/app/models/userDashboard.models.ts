@@ -1,26 +1,31 @@
 export interface UserProfile {
-  userId: number;
+  id: number;
   fullName: string;
   email: string;
   monthlySalary: number;
   monthlyExpenses: number;
-  savingCapacity: number;
   role: string;
 }
 
 export interface FinancialSummary {
-  totalInvested: number;
-  portfolioValue: number;
-  totalProfit: number;
-  monthlyCapacity: number;
-  
+  userId: number;
+  monthlySalary: number;
+  monthlyExpenses: number;
+  netMonthlySavings: number;
+  expenseRatioPercentage: number;
+  savingsRatePercentage: number;
+  canInvest: boolean;
 }
 
 export interface FinancialGoal {
-  goalName: string;
-  currentAmount: number;
-  targetAmount: number;
-  progressPercentage: number;
-  status: string;
-  targetDate: string;
+  id: number;
+  goalName?: string;
+  targetAmount?: number;
+  currentAmount?: number;
+}
+
+export interface DashboardMetrics {
+  totalInvestment: number;
+  totalPlans: number;
+  totalGoals: number;
 }

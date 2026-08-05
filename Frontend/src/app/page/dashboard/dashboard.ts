@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   inject,
   OnInit
@@ -21,6 +22,7 @@ import { Dashboard } from '../../services/dashboard';
 export class AdminDashboard implements OnInit {
 
   private readonly dashboardService = inject(Dashboard);
+  private readonly cdr = inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
 
   loading = true;
   stats: DashboardStats | null = null;
@@ -41,11 +43,13 @@ export class AdminDashboard implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
+          this.cdr.detectChanges(); // 2. Ensure loading state clears in UI
         })
       )
       .subscribe({
         next: stats => {
           this.stats = stats;
+          this.cdr.detectChanges(); // 3. Render dashboard stats immediately
         },
 
         error: error => {
@@ -60,6 +64,7 @@ export class AdminDashboard implements OnInit {
             'Failed to load dashboard data. Please try again.';
 
           this.showToast(message, true);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -124,6 +129,7 @@ export class AdminDashboard implements OnInit {
   ): void {
     this.toastMessage = message;
     this.toastIsError = isError;
+    this.cdr.detectChanges(); // 4. Guarantee toast appears instantly
 
     setTimeout(() => {
       this.hideToast();
@@ -133,5 +139,6 @@ export class AdminDashboard implements OnInit {
   private hideToast(): void {
     this.toastMessage = '';
     this.toastIsError = false;
+    this.cdr.detectChanges(); // 5. Clear toast UI when hidden
   }
 }
