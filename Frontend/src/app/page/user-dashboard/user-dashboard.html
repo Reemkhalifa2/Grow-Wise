@@ -39,54 +39,39 @@
         </div>
 
         <div class="stat-value">
-          {{
-            summary.totalInvested
-              | number:'1.2-2'
-          }}
-          OMR
+          {{ metrics.totalInvestment | number:'1.2-2' }} OMR
         </div>
 
         <div class="stat-description">
-          Total contributions
+          Total contributions made
         </div>
       </article>
 
       <article class="stat-card">
         <div class="stat-label">
-          Portfolio value
+          Total plans
         </div>
 
         <div class="stat-value">
-          {{
-            summary.portfolioValue
-              | number:'1.2-2'
-          }}
-          OMR
+          {{ metrics.totalPlans }}
         </div>
 
         <div class="stat-description">
-          Current estimated value
+          Active investment plans
         </div>
       </article>
 
       <article class="stat-card">
         <div class="stat-label">
-          Total profit
+          Total goals
         </div>
 
         <div class="stat-value">
-          {{
-            summary.totalProfit
-              | number:'1.2-2'
-          }}
-          OMR
+          {{ metrics.totalGoals }}
         </div>
 
-        <div class="stat-description positive">
-          +{{
-            profitPercentage
-              | number:'1.1-1'
-          }}%
+        <div class="stat-description">
+          Financial goals tracked
         </div>
       </article>
 
@@ -96,11 +81,7 @@
         </div>
 
         <div class="stat-value">
-          {{
-            summary.monthlyCapacity
-              | number:'1.2-2'
-          }}
-          OMR
+          {{ summary.netMonthlySavings | number:'1.2-2' }} OMR
         </div>
 
         <div class="stat-description">
@@ -112,7 +93,7 @@
 
     @if (profile) {
       <section class="profile-card">
-        <h2>Financial profile</h2>
+        <h2>Financial profile & overview</h2>
 
         <div class="profile-grid">
           <div>
@@ -132,33 +113,21 @@
           <div>
             <span>Monthly salary</span>
             <strong>
-              {{
-                profile.monthlySalary
-                  | number:'1.2-2'
-              }}
-              OMR
+              {{ profile.monthlySalary | number:'1.2-2' }} OMR
             </strong>
           </div>
 
           <div>
             <span>Monthly expenses</span>
             <strong>
-              {{
-                profile.monthlyExpenses
-                  | number:'1.2-2'
-              }}
-              OMR
+              {{ profile.monthlyExpenses | number:'1.2-2' }} OMR
             </strong>
           </div>
 
           <div>
             <span>Saving capacity</span>
             <strong>
-              {{
-                profile.savingCapacity
-                  | number:'1.2-2'
-              }}
-              OMR
+              {{ summary.netMonthlySavings | number:'1.2-2' }} OMR
             </strong>
           </div>
 
@@ -166,6 +135,27 @@
             <span>Role</span>
             <strong>
               {{ profile.role }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Total investment</span>
+            <strong>
+              {{ metrics.totalInvestment | number:'1.2-2' }} OMR
+            </strong>
+          </div>
+
+          <div>
+            <span>Active plans</span>
+            <strong>
+              {{ metrics.totalPlans }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Target goals</span>
+            <strong>
+              {{ metrics.totalGoals }}
             </strong>
           </div>
         </div>

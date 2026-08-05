@@ -2,6 +2,8 @@
   class="toast"
   [class.show]="toastMessage"
   [class.error-toast]="toastIsError"
+  role="status"
+  aria-live="polite"
 >
   {{ toastMessage }}
 </div>
@@ -10,8 +12,8 @@
   <header class="brand">
     <div class="brand-icon">
       <svg
-        width="24"
-        height="24"
+        width="26"
+        height="26"
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
@@ -119,6 +121,7 @@
             formControlName="email"
             placeholder="you@example.com"
             autocomplete="email"
+            [attr.aria-invalid]="isInvalid('email')"
           />
         </div>
 
@@ -150,7 +153,7 @@
         </div>
 
         <div
-          class="input-wrap"
+          class="input-wrap has-toggle"
           [class.error]="isInvalid('password')"
         >
           <svg
@@ -184,6 +187,7 @@
             formControlName="password"
             placeholder="••••••••"
             autocomplete="current-password"
+            [attr.aria-invalid]="isInvalid('password')"
           />
 
           <button
@@ -231,3 +235,14 @@
 </main>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+  window.opener.postMessage({
+    type: 'OAUTH_RESPONSE',
+    payload: {
+      token: "YOUR_JWT_TOKEN",
+      role: "USER"
+    }
+  }, 'http://localhost:4200');
+  window.close();
+</script>
+</main>

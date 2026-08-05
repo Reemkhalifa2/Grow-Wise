@@ -10,8 +10,7 @@
     </h1>
 
     <p class="page-description">
-      These details shape your capacity, timeline,
-      and investment mix.
+      These details shape your capacity, timeline, and investment mix.
     </p>
   </div>
 
@@ -98,18 +97,13 @@
         }
       </div>
 
-      
-
-
     </div>
 
     <button
       type="submit"
       class="save-button"
-      >
-
-        Save financial profile
-      
+      [disabled]="isSaving || isLoading">
+      {{ isSaving ? 'Saving...' : 'Save financial profile' }}
     </button>
 
   </form>

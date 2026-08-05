@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   inject,
   OnInit
@@ -28,11 +29,9 @@ import {
 })
 export class Portfolio implements OnInit {
 
-  private readonly authService =
-    inject(AuthService);
-
-  private readonly portfolioService =
-    inject(PortfolioService);
+  private readonly authService = inject(AuthService);
+  private readonly portfolioService = inject(PortfolioService);
+  private readonly cdr = inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
 
   plans: PortfolioPlan[] = [];
 
@@ -69,6 +68,7 @@ export class Portfolio implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
+          this.cdr.detectChanges(); // 2. Trigger change detection when loading finishes
         })
       )
       .subscribe({
@@ -82,6 +82,8 @@ export class Portfolio implements OnInit {
             this.groupInvestmentsByPlan(
               investments ?? []
             );
+
+          this.cdr.detectChanges(); // 3. Ensure component updates UI immediately
         },
 
         error: error => {
@@ -95,6 +97,8 @@ export class Portfolio implements OnInit {
             'Failed to load portfolio.',
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -258,6 +262,7 @@ export class Portfolio implements OnInit {
       .pipe(
         finalize(() => {
           this.completingPlanId = null;
+          this.cdr.detectChanges(); // 4. Clear loading state in view
         })
       )
       .subscribe({
@@ -281,6 +286,8 @@ export class Portfolio implements OnInit {
             'Failed to complete this month.',
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -315,10 +322,12 @@ export class Portfolio implements OnInit {
   ): void {
     this.toastMessage = message;
     this.toastIsError = isError;
+    this.cdr.detectChanges(); // 5. Guarantee toast displays instantly
 
     window.setTimeout(() => {
       this.toastMessage = '';
       this.toastIsError = false;
+      this.cdr.detectChanges();
     }, 4000);
   }
 }

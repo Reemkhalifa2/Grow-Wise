@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   inject,
   OnInit
@@ -44,6 +45,9 @@ export class FinancialGoal implements OnInit {
 
   private readonly router =
     inject(Router);
+
+  private readonly cdr =
+    inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
 
   saving = false;
   loadingGoals = false;
@@ -131,6 +135,7 @@ export class FinancialGoal implements OnInit {
       .pipe(
         finalize(() => {
           this.loadingGoals = false;
+          this.cdr.detectChanges(); // 2. Clear loading state in view
         })
       )
       .subscribe({
@@ -141,6 +146,7 @@ export class FinancialGoal implements OnInit {
           );
 
           this.savedGoals = goals;
+          this.cdr.detectChanges(); // 3. Render loaded goals array immediately
         },
 
         error: error => {
@@ -158,6 +164,8 @@ export class FinancialGoal implements OnInit {
             message,
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -521,6 +529,7 @@ export class FinancialGoal implements OnInit {
       .pipe(
         finalize(() => {
           this.saving = false;
+          this.cdr.detectChanges(); // 4. Clear saving spinner in UI
         })
       )
       .subscribe({
@@ -544,6 +553,7 @@ export class FinancialGoal implements OnInit {
             monthlyContribution: ''
           });
 
+          this.cdr.detectChanges(); // 5. Refresh form fields visually
           this.loadGoals();
         },
 
@@ -562,6 +572,8 @@ export class FinancialGoal implements OnInit {
             message,
             true
           );
+
+          this.cdr.detectChanges();
         }
       });
   }
@@ -576,9 +588,12 @@ export class FinancialGoal implements OnInit {
     this.toastIsError =
       isError;
 
+    this.cdr.detectChanges(); // 6. Force toast to appear instantly
+
     window.setTimeout(() => {
       this.toastMessage = '';
       this.toastIsError = false;
+      this.cdr.detectChanges(); // 7. Clear toast when timer expires
     }, 4000);
   }
 }
