@@ -160,4 +160,16 @@ public class InvestmentController {
 
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/complete-month")
+    public ResponseEntity<Void> completeMonth(
+            @RequestParam Integer userId,
+            @RequestParam Integer planId
+    ) {
+        investmentService.completeMonthlyInvestment(
+                userId,
+                planId
+        );
+
+        return ResponseEntity.ok().build();
+    }
 }

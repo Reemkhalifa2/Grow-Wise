@@ -1,4 +1,5 @@
-<div  class="toast"
+<div
+  class="toast"
   [class.show]="toastMessage"
   [class.error-toast]="toastIsError"
 >
@@ -9,204 +10,527 @@
 
   <header class="page-header">
     <span class="eyebrow">Goal calculator</span>
-    <h1>Plan your next milestone</h1>
-    <p class="subtitle">
-      Adjust the numbers to see your available amount and expected timeline instantly.
-    </p>
+
+<h1>Plan your next milestone</h1>
+
+<p class="subtitle">
+  Adjust the numbers to see your available amount and expected timeline instantly.
+</p>
+
   </header>
 
-  <div class="layout" [formGroup]="goalForm">
+  <div
+    class="layout"
+    [formGroup]="goalForm"
+  >
 
-    <!-- Goal details form -->
-    <section class="details-card">
-      <div class="details-heading">
-        <span class="details-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8" />
-            <path d="M8 8h8M8 12h3M13 12h3M8 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+<!-- Goal details form -->
+<section class="details-card">
+
+  <div class="details-heading">
+    <span class="details-icon">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <rect
+          x="4"
+          y="3"
+          width="16"
+          height="18"
+          rx="2"
+          stroke="currentColor"
+          stroke-width="1.8"
+        />
+
+        <path
+          d="M8 8h8M8 12h3M13 12h3M8 16h3"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      </svg>
+    </span>
+
+    <h2>Goal details</h2>
+  </div>
+
+  <div class="field">
+    <label for="goalName">
+      Goal name
+    </label>
+
+    <input
+      id="goalName"
+      name="goalName"
+      type="text"
+      formControlName="goalName"
+      placeholder="For example: Buy a house"
+      autocomplete="off"
+    />
+
+    @if (
+      goalForm.controls.goalName.touched &&
+      goalForm.controls.goalName.invalid
+    ) {
+      <small class="validation-error">
+        Goal name is required.
+      </small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="monthlySalary">
+      Monthly salary
+    </label>
+
+    <input
+      id="monthlySalary"
+      name="monthlySalary"
+      type="number"
+      min="0"
+      step="0.001"
+      formControlName="monthlySalary"
+      placeholder="0.000"
+      autocomplete="off"
+    />
+
+    @if (
+      goalForm.controls.monthlySalary.touched &&
+      goalForm.controls.monthlySalary.invalid
+    ) {
+      <small class="validation-error">
+        Enter a valid monthly salary.
+      </small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="monthlyExpenses">
+      Monthly expenses
+    </label>
+
+    <input
+      id="monthlyExpenses"
+      name="monthlyExpenses"
+      type="number"
+      min="0"
+      step="0.001"
+      formControlName="monthlyExpenses"
+      placeholder="0.000"
+      autocomplete="off"
+    />
+
+    @if (
+      goalForm.controls.monthlyExpenses.touched &&
+      goalForm.controls.monthlyExpenses.invalid
+    ) {
+      <small class="validation-error">
+        Enter valid monthly expenses.
+      </small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="currentSavings">
+      Current savings
+    </label>
+
+    <input
+      id="currentSavings"
+      name="currentSavings"
+      type="number"
+      min="0"
+      step="0.001"
+      formControlName="currentSavings"
+      placeholder="0.000"
+      autocomplete="off"
+    />
+
+    @if (
+      goalForm.controls.currentSavings.touched &&
+      goalForm.controls.currentSavings.invalid
+    ) {
+      <small class="validation-error">
+        Enter valid current savings.
+      </small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="targetAmount">
+      Target amount
+    </label>
+
+    <input
+      id="targetAmount"
+      name="targetAmount"
+      type="number"
+      min="1"
+      step="0.001"
+      formControlName="targetAmount"
+      placeholder="0.000"
+      autocomplete="off"
+    />
+
+    @if (
+      goalForm.controls.targetAmount.touched &&
+      goalForm.controls.targetAmount.invalid
+    ) {
+      <small class="validation-error">
+        Target amount must be greater than zero.
+      </small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="monthlyContribution">
+      Monthly contribution
+    </label>
+
+    <input
+      id="monthlyContribution"
+      name="monthlyContribution"
+      type="number"
+      min="0"
+      step="0.001"
+      formControlName="monthlyContribution"
+      placeholder="0.000"
+      autocomplete="off"
+    />
+
+    @if (
+      goalForm.controls.monthlyContribution.touched &&
+      goalForm.controls.monthlyContribution.invalid
+    ) {
+      <small class="validation-error">
+        Enter a valid monthly contribution.
+      </small>
+    }
+  </div>
+
+</section>
+
+<!-- Results -->
+<section class="results">
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">
+          Available investment amount
+        </span>
+
+        <span class="stat-icon">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <ellipse
+              cx="12"
+              cy="6"
+              rx="7"
+              ry="2.4"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M5 6v6c0 1.3 3.1 2.4 7 2.4s7-1.1 7-2.4V6"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M5 12v6c0 1.3 3.1 2.4 7 2.4s7-1.1 7-2.4v-6"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
           </svg>
         </span>
-        <h2>Goal details</h2>
       </div>
 
-      <div class="field">
-        <label for="monthlySalary">Monthly salary</label>
-        <input
-          id="monthlySalary"
-          type="number"
-          formControlName="monthlySalary"
-        />
+      <div
+        class="stat-value"
+        [class.value-negative]="isAvailableAmountNegative"
+      >
+        {{
+          availableInvestmentAmount
+            | currency:'OMR':'code':'1.3-3'
+        }}
       </div>
 
-      <div class="field">
-        <label for="monthlyExpenses">Monthly expenses</label>
-        <input
-          id="monthlyExpenses"
-          type="number"
-          formControlName="monthlyExpenses"
-        />
+      <div class="stat-footnote muted">
+        Salary minus expenses
       </div>
+    </div>
 
-      <div class="field">
-        <label for="currentSavings">Current savings</label>
-        <input
-          id="currentSavings"
-          type="number"
-          formControlName="currentSavings"
-        />
-      </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">
+          Monthly investment capacity
+        </span>
 
-      <div class="field">
-        <label for="targetAmount">Target amount</label>
-        <input
-          id="targetAmount"
-          type="number"
-          formControlName="targetAmount"
-        />
-      </div>
-
-      <div class="field">
-        <label for="monthlyContribution">Monthly contribution</label>
-        <input
-          id="monthlyContribution"
-          type="number"
-          formControlName="monthlyContribution"
-        />
-      </div>
-    </section>
-
-    <!-- Results -->
-    <section class="results">
-
-      <div class="stats-grid">
-
-        <div class="stat-card">
-          <div class="stat-top">
-            <span class="stat-label">Available investment amount</span>
-            <span class="stat-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <ellipse cx="12" cy="6" rx="7" ry="2.4" stroke="currentColor" stroke-width="1.7" />
-                <path d="M5 6v6c0 1.3 3.1 2.4 7 2.4s7-1.1 7-2.4V6" stroke="currentColor" stroke-width="1.7" />
-                <path d="M5 12v6c0 1.3 3.1 2.4 7 2.4s7-1.1 7-2.4v-6" stroke="currentColor" stroke-width="1.7" />
-              </svg>
-            </span>
-          </div>
-          <div
-            class="stat-value"
-            [class.value-negative]="isAvailableAmountNegative"
+        <span class="stat-icon">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
           >
-            {{ availableInvestmentAmount | currency:'OMR':'code':'1.3-3' }}
-          </div>
-          <div class="stat-footnote muted">Salary minus expenses</div>
-        </div>
+            <path
+              d="M4 13c0-3.5 3-6.5 8-6.5s8 3 8 6.5-3 5-8 5-8-1.5-8-5z"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
 
-        <div class="stat-card">
-          <div class="stat-top">
-            <span class="stat-label">Monthly investment capacity</span>
-            <span class="stat-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 13c0-3.5 3-6.5 8-6.5s8 3 8 6.5-3 5-8 5-8-1.5-8-5z" stroke="currentColor" stroke-width="1.7" />
-                <circle cx="16" cy="11" r="0.8" fill="currentColor" />
-                <path d="M9 6.8L7.5 4.5M15 6.5l1-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-              </svg>
-            </span>
-          </div>
-          <div class="stat-value">{{ monthlyInvestmentCapacity | currency:'OMR':'code':'1.3-3' }}</div>
-          <div class="stat-footnote muted">{{ capacityPercentOfIncome }}% of income</div>
-        </div>
+            <circle
+              cx="16"
+              cy="11"
+              r="0.8"
+              fill="currentColor"
+            />
 
-        <div class="stat-card">
-          <div class="stat-top">
-            <span class="stat-label">Saving progress</span>
-            <span class="stat-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.7" />
-                <path d="M9 3v3h6V3" stroke="currentColor" stroke-width="1.7" />
-                <path d="M8.5 12.5l2 2 4-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-          </div>
-          <div class="stat-value">{{ savingProgressPercent }}%</div>
-          <div class="stat-footnote muted">
-            {{ remainingAmount | currency:'OMR':'code':'1.3-3' }} remaining
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-top">
-            <span class="stat-label">Goal timeline</span>
-            <span class="stat-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="13" r="7.5" stroke="currentColor" stroke-width="1.7" />
-                <path d="M12 9v4l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M9.5 2.5h5M12 2.5V5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-              </svg>
-            </span>
-          </div>
-          <div class="stat-value">{{ timelineLabel }}</div>
-          <div class="stat-footnote muted">{{ timelineYearsMonthsLabel }}</div>
-        </div>
-
+            <path
+              d="M9 6.8L7.5 4.5M15 6.5l1-2"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
       </div>
 
-      <!-- Goal achievement -->
-      <div class="achievement-card">
-        <div class="achievement-header">
-          <h2 class="panel-title">Goal achievement</h2>
-          <span class="achievement-fraction">
-            {{ goalForm.controls.currentSavings.value | currency:'OMR':'code':'1.3-3' }}
-            /
-            {{ goalForm.controls.targetAmount.value | currency:'OMR':'code':'1.3-3' }}
-          </span>
-        </div>
-
-        <div class="progress-track">
-          <div
-            class="progress-fill"
-            [style.width.%]="achievementBarWidth"
-          ></div>
-        </div>
-
-        <p class="achievement-caption">{{ achievementCaption }}</p>
-
-        <button
-          type="button"
-          class="btn-save"
-          [disabled]="saving"
-          (click)="saveGoal()"
-        >
-          {{ saving ? 'Saving...' : 'Save goal' }}
-        </button>
+      <div class="stat-value">
+        {{
+          monthlyInvestmentCapacity
+            | currency:'OMR':'code':'1.3-3'
+        }}
       </div>
 
-      <!-- Saved goals -->
-      <div class="achievement-card">
-        <h2 class="panel-title">Saved goals</h2>
+      <div class="stat-footnote muted">
+        {{ capacityPercentOfIncome }}% of income
+      </div>
+    </div>
 
-        @if (loadingGoals) {
-          <p class="empty-note">Loading…</p>
-        } @else if (savedGoals.length === 0) {
-          <p class="empty-note">No goals saved yet.</p>
-        } @else {
-          <div class="saved-goals-list">
-            @for (goal of savedGoals; track goal.id) {
-              <div class="saved-goal-row">
-                <div>
-                  <div class="saved-goal-target">
-                    {{ goal.goalName }} — {{ goal.targetAmount | currency:'OMR':'code':'1.3-3' }}
-                  </div>
-                  <div class="saved-goal-sub">
-                    Saved so far: {{ goal.currentAmount | currency:'OMR':'code':'1.3-3' }}
-                    · {{ goal.progressPercentage | number:'1.0-1' }}% · {{ goal.status }}
-                  </div>
-                </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">
+          Saving progress
+        </span>
+
+        <span class="stat-icon">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect
+              x="5"
+              y="3"
+              width="14"
+              height="18"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M9 3v3h6V3"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M8.5 12.5l2 2 4-4.5"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+      </div>
+
+      <div class="stat-value">
+        {{ savingProgressPercent }}%
+      </div>
+
+      <div class="stat-footnote muted">
+        {{
+          remainingAmount
+            | currency:'OMR':'code':'1.3-3'
+        }}
+        remaining
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">
+          Goal timeline
+        </span>
+
+        <span class="stat-icon">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="12"
+              cy="13"
+              r="7.5"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M12 9v4l3 2"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <path
+              d="M9.5 2.5h5M12 2.5V5"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
+      </div>
+
+      <div class="stat-value">
+        {{ timelineLabel }}
+      </div>
+
+      <div class="stat-footnote muted">
+        {{ timelineYearsMonthsLabel }}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Goal achievement -->
+  <div class="achievement-card">
+
+    <div class="achievement-header">
+      <h2 class="panel-title">
+        Goal achievement
+      </h2>
+
+      <span class="achievement-fraction">
+        {{
+          goalForm.controls.currentSavings.value
+            | currency:'OMR':'code':'1.3-3'
+        }}
+        /
+        {{
+          goalForm.controls.targetAmount.value
+            | currency:'OMR':'code':'1.3-3'
+        }}
+      </span>
+    </div>
+
+    <div class="progress-track">
+      <div
+        class="progress-fill"
+        [style.width.%]="achievementBarWidth"
+      ></div>
+    </div>
+
+    <p class="achievement-caption">
+      {{ achievementCaption }}
+    </p>
+
+    <button
+      type="button"
+      class="btn-save"
+      [disabled]="saving"
+      (click)="saveGoal()"
+    >
+      {{ saving ? 'Saving...' : 'Save goal' }}
+    </button>
+
+  </div>
+
+  <!-- Saved goals -->
+  <div class="achievement-card">
+
+    <h2 class="panel-title">
+      Saved goals
+    </h2>
+
+    @if (loadingGoals) {
+      <p class="empty-note">
+        Loading…
+      </p>
+    } @else if (savedGoals.length === 0) {
+      <p class="empty-note">
+        No goals saved yet.
+      </p>
+    } @else {
+      <div class="saved-goals-list">
+
+        @for (
+          goal of savedGoals;
+          track goal.id
+        ) {
+          <div class="saved-goal-row">
+
+            <div class="saved-goal-content">
+
+              <div class="saved-goal-target">
+                {{ goal.goalName }} —
+                {{
+                  goal.targetAmount
+                    | currency:'OMR':'code':'1.3-3'
+                }}
               </div>
-            }
+
+              <div class="saved-goal-sub">
+                Saved so far:
+                {{
+                  goal.currentAmount
+                    | currency:'OMR':'code':'1.3-3'
+                }}
+
+                ·
+                {{
+                  goal.progressPercentage
+                    | number:'1.0-1'
+                }}%
+
+                · {{ goal.status }}
+              </div>
+
+            </div>
+
+          
           </div>
         }
-      </div>
 
-    </section>
+      </div>
+    }
+
+  </div>
+
+</section>
 
   </div>
 

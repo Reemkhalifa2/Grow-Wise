@@ -1,13 +1,14 @@
 package com.example.InvestmentGoalManagementPlatform.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -35,6 +36,18 @@ public class InvestmentPlan extends BaseEntity {
     private User user;
     @OneToMany
     private List<Investment> investment;
+
+    @ManyToOne
+    private FinancialGoal financialGoal;
+
+    @OneToMany(
+            mappedBy = "investmentPlan",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PlanAllocation> assetAllocations =
+            new ArrayList<>();
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.example.InvestmentGoalManagementPlatform.service;
 
+import com.example.InvestmentGoalManagementPlatform.DTO.AvailableAssetDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.MarketDiscoveryDTO;
 import com.example.InvestmentGoalManagementPlatform.entity.Asset;
 import com.example.InvestmentGoalManagementPlatform.entity.StockPriceHistory;
@@ -33,6 +34,13 @@ public class MarketDiscoveryService {
     private final StockPriceHistoryRepository historyRepository;
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
 
+    public List<AvailableAssetDTO> getAvailableAssets() {
+        return assetRepository
+                .findAllByIsActiveTrue()
+                .stream()
+                .map(AvailableAssetDTO::fromEntity)
+                .toList();
+    }
     /**
      * Scrapes all three market sources (Bank Muscat, Live Gold, and MSX)
      * and flags items already saved in the DB catalog.

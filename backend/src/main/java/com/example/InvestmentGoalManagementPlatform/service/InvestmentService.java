@@ -1,10 +1,7 @@
 package com.example.InvestmentGoalManagementPlatform.service;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentDTO;
-import com.example.InvestmentGoalManagementPlatform.entity.Asset;
-import com.example.InvestmentGoalManagementPlatform.entity.Investment;
-import com.example.InvestmentGoalManagementPlatform.entity.InvestmentPlan;
-import com.example.InvestmentGoalManagementPlatform.entity.User;
+import com.example.InvestmentGoalManagementPlatform.entity.*;
 import com.example.InvestmentGoalManagementPlatform.exception.ResourceNotFoundException;
 import com.example.InvestmentGoalManagementPlatform.repository.AssetRepository;
 import com.example.InvestmentGoalManagementPlatform.repository.InvestmentPlanRepository;
@@ -14,6 +11,9 @@ import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -37,6 +37,139 @@ public class InvestmentService {
         this.investmentPlanRepository = investmentPlanRepository;
         this.assetRepository = assetRepository;
         this.streakService = streakService;
+    }
+
+    @Transactional
+    public void completeMonthlyInvestment(
+            Integer userId,
+            Integer planId
+    ) {
+        User user =
+                userRepository.findByUserId(userId);
+
+        if (user == null) {
+            throw new ResourceNotFoundException(
+                    "User not found with id: " + userId
+            );
+        }
+
+        InvestmentPlan plan =
+                investmentPlanRepository
+                        .findByIdAndIsActiveTrue(planId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Investment plan not found with id: "
+                                                + planId
+                                )
+                        );
+
+        if (
+                plan.getUser() == null ||
+                        !plan.getUser().getId().equals(user.getId())
+        ) {
+            throw new IllegalArgumentException(
+                    "Investment plan does not belong to this user"
+            );
+        }
+
+        if (
+                plan.getAssetAllocations() == null ||
+                        plan.getAssetAllocations().isEmpty()
+        ) {
+            throw new IllegalArgumentException(
+                    "Investment plan has no asset allocations"
+            );
+        }
+
+
+        YearMonth currentMonth =
+                YearMonth.now();
+
+        LocalDateTime startOfCurrentMonth =
+                currentMonth
+                        .atDay(1)
+                        .atStartOfDay();
+
+        LocalDateTime startOfNextMonth =
+                currentMonth
+                        .plusMonths(1)
+                        .atDay(1)
+                        .atStartOfDay();
+
+        Double alreadyInvested =
+                investmentRepository
+                        .sumMonthlyInvestmentByUserAndPlan(
+                                userId,
+                                planId,
+                                startOfCurrentMonth,
+                                startOfNextMonth
+                        );
+
+        if (
+                alreadyInvested != null &&
+                        alreadyInvested >=
+                                plan.getMonthlyInvestmentAmount()
+        ) {
+            throw new IllegalArgumentException(
+                    "This month's investment is already completed"
+            );
+        }
+
+        for (
+                PlanAllocation allocation :
+                plan.getAssetAllocations()
+        ) {
+            double monthlyAmount =
+                    plan.getMonthlyInvestmentAmount()
+                            * allocation.getAllocationPercentage()
+                            / 100.0;
+
+            Investment investment =
+                    new Investment();
+
+            investment.setUser(user);
+            investment.setInvestmentPlan(plan);
+            investment.setAsset(
+                    allocation.getAsset()
+            );
+            investment.setAmountInvested(
+                    monthlyAmount
+            );
+            investment.setPurchaseDate(
+                    LocalDate.now()
+            );
+            investment.setIsActive(true);
+
+            investmentRepository.save(investment);
+        }
+
+        investmentRepository.flush();
+
+        streakService.updateInvestmentStreak(
+                user,
+                plan
+        );
+    }
+    @Transactional
+    public Investment createFromPlan(
+            User user,
+            InvestmentPlan plan,
+            Asset asset,
+            Double monthlyAmount
+    ) {
+        Investment investment =
+                new Investment();
+
+        investment.setUser(user);
+        investment.setInvestmentPlan(plan);
+        investment.setAsset(asset);
+        investment.setAmountInvested(monthlyAmount);
+        investment.setIsActive(true);
+        investment.setPurchaseDate(
+                LocalDate.now()
+        );
+
+        return investmentRepository.save(investment);
     }
 
     @Transactional

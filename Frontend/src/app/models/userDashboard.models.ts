@@ -13,6 +13,7 @@ export interface FinancialSummary {
   portfolioValue: number;
   totalProfit: number;
   monthlyCapacity: number;
+  
 }
 
 export interface FinancialGoal {

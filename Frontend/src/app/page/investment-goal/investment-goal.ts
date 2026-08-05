@@ -1,16 +1,24 @@
-
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit
+} from '@angular/core';
 import {
   FormBuilder,
-  ReactiveFormsModule
+  ReactiveFormsModule,
+  Validators
 } from '@angular/forms';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
-import { investmentGoalService } from '../../services/investmentGoal-service';
+import { AuthService } from '../../services/auth.service';
 import {
-  investmentGoalRequest,
-  investmentGoalResponse
+  investmentGoalService
+} from '../../services/investmentGoal-service';
+import {
+  InvestmentGoalRequest,
+  InvestmentGoalResponse
 } from '../../models/investmentGoal-models';
 
 @Component({
@@ -25,25 +33,73 @@ import {
 })
 export class FinancialGoal implements OnInit {
 
-  private readonly formBuilder = inject(FormBuilder);
+  private readonly formBuilder =
+    inject(FormBuilder);
+
+  private readonly authService =
+    inject(AuthService);
 
   private readonly financialGoalService =
     inject(investmentGoalService);
 
-  saving = false;
-  loadingGoals = true;
+  private readonly router =
+    inject(Router);
 
-  savedGoals: investmentGoalResponse[] = [];
+  saving = false;
+  loadingGoals = false;
+
+  savedGoals: InvestmentGoalResponse[] = [];
 
   toastMessage = '';
   toastIsError = false;
 
   readonly goalForm = this.formBuilder.group({
-    monthlySalary: [4200],
-    monthlyExpenses: [2650],
-    currentSavings: [18500],
-    targetAmount: [40000],
-    monthlyContribution: [300]
+    goalName: [
+      '',
+      [
+        Validators.required
+      ]
+    ],
+
+    monthlySalary: [
+      '',
+      [
+        Validators.required,
+        Validators.min(0)
+      ]
+    ],
+
+    monthlyExpenses: [
+      '',
+      [
+        Validators.required,
+        Validators.min(0)
+      ]
+    ],
+
+    currentSavings: [
+      '',
+      [
+        Validators.required,
+        Validators.min(0)
+      ]
+    ],
+
+    targetAmount: [
+      '',
+      [
+        Validators.required,
+        Validators.min(1)
+      ]
+    ],
+
+    monthlyContribution: [
+      '',
+      [
+        Validators.required,
+        Validators.min(0)
+      ]
+    ]
   });
 
   ngOnInit(): void {
@@ -51,14 +107,27 @@ export class FinancialGoal implements OnInit {
   }
 
   private get userId(): number {
-    return Number(localStorage.getItem('userId')) || 0;
+    return this.authService.getUserId() ?? 0;
   }
 
   loadGoals(): void {
+    const userId = this.userId;
+
+    if (userId <= 0) {
+      this.loadingGoals = false;
+
+      this.showToast(
+        'User session was not found.',
+        true
+      );
+
+      return;
+    }
+
     this.loadingGoals = true;
 
     this.financialGoalService
-      .list()
+      .getByUserId(userId)
       .pipe(
         finalize(() => {
           this.loadingGoals = false;
@@ -66,6 +135,11 @@ export class FinancialGoal implements OnInit {
       )
       .subscribe({
         next: goals => {
+          console.log(
+            'Loaded goals:',
+            goals
+          );
+
           this.savedGoals = goals;
         },
 
@@ -75,28 +149,58 @@ export class FinancialGoal implements OnInit {
             error
           );
 
+          const message =
+            error.error?.message ??
+            error.error?.error ??
+            'Failed to load saved goals.';
+
           this.showToast(
-            'Failed to load saved goals.',
+            message,
             true
           );
         }
       });
   }
 
+  createInvestmentPlan(
+    goalId: number
+  ): void {
+    this.router.navigate([
+      '/investment-plan',
+      goalId
+    ]);
+  }
+
   private get values() {
-    const raw = this.goalForm.getRawValue();
+    const raw =
+      this.goalForm.getRawValue();
 
     return {
-      salary: Number(raw.monthlySalary) || 0,
-      expenses: Number(raw.monthlyExpenses) || 0,
-      currentSavings: Number(raw.currentSavings) || 0,
-      targetAmount: Number(raw.targetAmount) || 0,
-      contribution: Number(raw.monthlyContribution) || 0
+      goalName:
+        raw.goalName?.trim() ?? '',
+
+      salary:
+        Number(raw.monthlySalary) || 0,
+
+      expenses:
+        Number(raw.monthlyExpenses) || 0,
+
+      currentSavings:
+        Number(raw.currentSavings) || 0,
+
+      targetAmount:
+        Number(raw.targetAmount) || 0,
+
+      contribution:
+        Number(raw.monthlyContribution) || 0
     };
   }
 
   get availableInvestmentAmount(): number {
-    const { salary, expenses } = this.values;
+    const {
+      salary,
+      expenses
+    } = this.values;
 
     return salary - expenses;
   }
@@ -106,20 +210,31 @@ export class FinancialGoal implements OnInit {
   }
 
   get monthlyInvestmentCapacity(): number {
-    return this.availableInvestmentAmount;
+    return Math.max(
+      this.availableInvestmentAmount,
+      0
+    );
   }
 
   get capacityPercentOfIncome(): string {
-    const { salary } = this.values;
+    const {
+      salary
+    } = this.values;
 
     if (salary <= 0) {
       return '0';
     }
 
     const percentage =
-      (this.availableInvestmentAmount / salary) * 100;
+      (
+        this.availableInvestmentAmount /
+        salary
+      ) * 100;
 
-    return percentage.toFixed(0);
+    return Math.max(
+      percentage,
+      0
+    ).toFixed(0);
   }
 
   get savingProgressPercent(): string {
@@ -133,7 +248,10 @@ export class FinancialGoal implements OnInit {
     }
 
     const percentage =
-      (currentSavings / targetAmount) * 100;
+      (
+        currentSavings /
+        targetAmount
+      ) * 100;
 
     return percentage.toFixed(1);
   }
@@ -149,11 +267,17 @@ export class FinancialGoal implements OnInit {
     }
 
     const percentage =
-      (currentSavings / targetAmount) * 100;
+      (
+        currentSavings /
+        targetAmount
+      ) * 100;
 
     return Math.max(
       0,
-      Math.min(percentage, 100)
+      Math.min(
+        percentage,
+        100
+      )
     );
   }
 
@@ -170,11 +294,21 @@ export class FinancialGoal implements OnInit {
   }
 
   get isGoalReached(): boolean {
-    return this.remainingAmount <= 0;
+    return (
+      this.values.targetAmount > 0 &&
+      this.remainingAmount <= 0
+    );
   }
 
   get monthsToGoal(): number | null {
-    const { contribution } = this.values;
+    const {
+      contribution,
+      targetAmount
+    } = this.values;
+
+    if (targetAmount <= 0) {
+      return null;
+    }
 
     if (this.isGoalReached) {
       return 0;
@@ -185,12 +319,14 @@ export class FinancialGoal implements OnInit {
     }
 
     return Math.ceil(
-      this.remainingAmount / contribution
+      this.remainingAmount /
+      contribution
     );
   }
 
   get timelineLabel(): string {
-    const months = this.monthsToGoal;
+    const months =
+      this.monthsToGoal;
 
     if (months === null) {
       return '—';
@@ -200,29 +336,86 @@ export class FinancialGoal implements OnInit {
   }
 
   get timelineYearsMonthsLabel(): string {
-    const months = this.monthsToGoal;
+    const months =
+      this.monthsToGoal;
 
     if (months === null) {
       return 'Add a monthly contribution';
     }
 
-    const years = Math.floor(months / 12);
-    const remainingMonths = months % 12;
+    if (months === 0) {
+      return 'Goal reached';
+    }
 
-    return `${years} year${years === 1 ? '' : 's'}, ` +
-      `${remainingMonths} month${remainingMonths === 1 ? '' : 's'}`;
+    const years =
+      Math.floor(months / 12);
+
+    const remainingMonths =
+      months % 12;
+
+    if (years === 0) {
+      return (
+        `${remainingMonths} month` +
+        `${remainingMonths === 1 ? '' : 's'}`
+      );
+    }
+
+    if (remainingMonths === 0) {
+      return (
+        `${years} year` +
+        `${years === 1 ? '' : 's'}`
+      );
+    }
+
+    return (
+      `${years} year${years === 1 ? '' : 's'}, ` +
+      `${remainingMonths} month` +
+      `${remainingMonths === 1 ? '' : 's'}`
+    );
   }
 
   private get projectedDate(): Date {
-    const months = this.monthsToGoal ?? 1;
+    const projected =
+      new Date();
 
-    const projected = new Date();
+    const months =
+      this.monthsToGoal ?? 1;
 
     projected.setMonth(
-      projected.getMonth() + Math.max(months, 1)
+      projected.getMonth() +
+      Math.max(
+        months,
+        1
+      )
     );
 
     return projected;
+  }
+
+  private get projectedDateValue(): string {
+    const projected =
+      this.projectedDate;
+
+    const year =
+      projected.getFullYear();
+
+    const month =
+      String(
+        projected.getMonth() + 1
+      ).padStart(
+        2,
+        '0'
+      );
+
+    const day =
+      String(
+        projected.getDate()
+      ).padStart(
+        2,
+        '0'
+      );
+
+    return `${year}-${month}-${day}`;
   }
 
   get projectedDateLabel(): string {
@@ -230,17 +423,29 @@ export class FinancialGoal implements OnInit {
       return 'Not available';
     }
 
-    return this.projectedDate.toLocaleDateString(
-      'en-US',
-      {
-        month: 'long',
-        year: 'numeric'
-      }
-    );
+    if (this.isGoalReached) {
+      return 'Goal reached';
+    }
+
+    return this.projectedDate
+      .toLocaleDateString(
+        'en-US',
+        {
+          month: 'long',
+          year: 'numeric'
+        }
+      );
   }
 
   get achievementCaption(): string {
-    const { contribution } = this.values;
+    const {
+      contribution,
+      targetAmount
+    } = this.values;
+
+    if (targetAmount <= 0) {
+      return 'Enter your target amount to see the projection.';
+    }
 
     if (this.isGoalReached) {
       return 'Goal already reached. Nice work.';
@@ -250,16 +455,30 @@ export class FinancialGoal implements OnInit {
       return 'Add a monthly contribution to see your projected timeline.';
     }
 
-    return `At OMR ${contribution}/month, you could reach this goal around ${this.projectedDateLabel}. Returns are not included.`;
+    return (
+      `At OMR ${contribution.toFixed(3)} per month, ` +
+      `you could reach this goal around ` +
+      `${this.projectedDateLabel}. ` +
+      `Investment returns are not included.`
+    );
   }
 
   saveGoal(): void {
-    const {
-      currentSavings,
-      targetAmount
-    } = this.values;
+    if (this.goalForm.invalid) {
+      this.goalForm.markAllAsTouched();
 
-    if (this.userId <= 0) {
+      this.showToast(
+        'Please complete all required fields.',
+        true
+      );
+
+      return;
+    }
+
+    const userId =
+      this.userId;
+
+    if (userId <= 0) {
       this.showToast(
         'User session was not found.',
         true
@@ -268,23 +487,37 @@ export class FinancialGoal implements OnInit {
       return;
     }
 
-    const request: investmentGoalRequest = {
-      goalName: 'Investment goal',
+    const {
+      goalName,
+      currentSavings,
+      targetAmount
+    } = this.values;
+
+    const request: InvestmentGoalRequest = {
+      goalName,
       targetAmount,
-      currentAmount: currentSavings,
+      currentAmount:
+        currentSavings,
       targetDate:
-        this.projectedDate
-          .toISOString()
-          .split('T')[0],
-      status: 'ACTIVE',
-      riskLevel: 'MEDIUM',
-      userId: this.userId
+        this.projectedDateValue,
+      status:
+        this.isGoalReached
+          ? 'ACHIEVED'
+          : 'ACTIVE',
+      riskLevel:
+        'MEDIUM',
+      userId
     };
+
+    console.log(
+      'Saving goal:',
+      request
+    );
 
     this.saving = true;
 
     this.financialGoalService
-      .save(request)
+      .create(request)
       .pipe(
         finalize(() => {
           this.saving = false;
@@ -292,15 +525,26 @@ export class FinancialGoal implements OnInit {
       )
       .subscribe({
         next: savedGoal => {
-          this.savedGoals = [
-            savedGoal,
-            ...this.savedGoals
-          ];
+          console.log(
+            'Goal saved successfully:',
+            savedGoal
+          );
 
           this.showToast(
             'Goal saved successfully.',
             false
           );
+
+          this.goalForm.reset({
+            goalName: '',
+            monthlySalary: '',
+            monthlyExpenses: '',
+            currentSavings: '',
+            targetAmount: '',
+            monthlyContribution: ''
+          });
+
+          this.loadGoals();
         },
 
         error: error => {
@@ -314,7 +558,10 @@ export class FinancialGoal implements OnInit {
             error.error?.error ??
             'Failed to save goal. Please try again.';
 
-          this.showToast(message, true);
+          this.showToast(
+            message,
+            true
+          );
         }
       });
   }
@@ -323,8 +570,11 @@ export class FinancialGoal implements OnInit {
     message: string,
     isError: boolean
   ): void {
-    this.toastMessage = message;
-    this.toastIsError = isError;
+    this.toastMessage =
+      message;
+
+    this.toastIsError =
+      isError;
 
     window.setTimeout(() => {
       this.toastMessage = '';

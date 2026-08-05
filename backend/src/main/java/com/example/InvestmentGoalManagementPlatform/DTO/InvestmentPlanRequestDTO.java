@@ -4,19 +4,19 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 public class InvestmentPlanRequestDTO {
 
-    private Integer financialGoalId;
+    private Integer userId;
 
-    private List<AssetInput> assets;
+    private Integer goalId;
 
-    @Getter
-    @Setter
-    public static class AssetInput {
-        private Integer assetId;
-        private Double monthlyAmount; // null if the user didn't specify an amount for this asset
-    }
+    private Double monthlyInvestmentAmount;
+
+    // Key = asset ID
+    // Value = allocation percentage
+    private Map<Integer, Double> assetAllocations;
 }

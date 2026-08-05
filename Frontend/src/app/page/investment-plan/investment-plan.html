@@ -1,0 +1,264 @@
+<div
+  class="toast"
+  [class.show]="toastMessage"
+  [class.error-toast]="toastIsError"
+>
+  {{ toastMessage }}
+</div>
+
+<main class="plan-page">
+
+  <header class="page-header">
+    <h1>Investment Plan</h1>
+    <p>Create a monthly investment plan for your financial goals.</p>
+  </header>
+
+  @if (loading) {
+    <section class="state-card">
+      Loading investment plan...
+    </section>
+  } @else if (goals.length === 0) {
+    <section class="state-card error-state">
+      No financial goals found. Create a goal first.
+    </section>
+  } @else {
+
+    <!-- Section 1: Goal Selection -->
+    <section class="card goal-card">
+
+      <span class="section-label">Goal selection</span>
+
+      <label for="goalSelect">Select Financial Goal</label>
+
+      <select
+        id="goalSelect"
+        class="goal-select"
+        [(ngModel)]="selectedGoalId"
+        (ngModelChange)="onGoalChange()"
+      >
+        @for (g of goals; track g.id) {
+          <option [ngValue]="g.id">
+            {{ g.goalName }}
+          </option>
+        }
+      </select>
+
+      @if (goal) {
+        <div class="goal-summary">
+
+          <article>
+            <span>Goal</span>
+            <strong>{{ goal.goalName }}</strong>
+          </article>
+
+          <article>
+            <span>Target amount</span>
+            <strong>
+              {{ goal.targetAmount | currency:'OMR':'code':'1.3-3' }}
+            </strong>
+          </article>
+
+          <article>
+            <span>Current savings</span>
+            <strong>
+              {{ currentSavings | currency:'OMR':'code':'1.3-3' }}
+            </strong>
+          </article>
+
+          <article>
+            <span>Risk level</span>
+            <strong>{{ goal.riskLevel ?? '—' }}</strong>
+          </article>
+
+          <article>
+            <span>Target date</span>
+            <strong>{{ goal.targetDate }}</strong>
+          </article>
+
+        </div>
+      }
+
+    </section>
+
+    <!-- Section 2: Monthly SIP -->
+    <section class="card sip-card">
+
+      <span class="section-label">Monthly SIP</span>
+      <h2>Set your monthly investment</h2>
+
+      <label for="monthlyInvestment">Monthly SIP amount</label>
+
+      <div class="money-input">
+        <span>OMR</span>
+        <input
+          id="monthlyInvestment"
+          type="number"
+          min="0"
+          step="0.001"
+          [(ngModel)]="monthlyInvestmentAmount"
+          (ngModelChange)="allocationChanged()"
+          placeholder="0.000"
+        />
+      </div>
+
+      <div class="sip-summary">
+
+        <div>
+          <span>Monthly Investment</span>
+          <strong>
+            {{ monthlyInvestmentAmount | currency:'OMR':'code':'1.3-3' }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Plan Type</span>
+          <strong>
+            {{ planType === 'AI_SUGGESTED' ? 'AI Suggested' : 'Manual' }}
+          </strong>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Section 3: Available Assets -->
+    <section class="card assets-card">
+
+      <span class="section-label">Portfolio</span>
+      <h2>Available Assets</h2>
+
+      @if (allocations.length === 0) {
+        <div class="empty-assets">
+          No assets are available.
+        </div>
+      } @else {
+
+        <div class="asset-grid">
+
+          @for (allocation of allocations; track allocation.assetId) {
+            <article class="asset-card">
+
+              <div class="asset-card-top">
+                <h3>{{ allocation.assetName }}</h3>
+                <span class="asset-symbol">{{ allocation.symbol }}</span>
+              </div>
+
+              <div class="asset-tags">
+                <span class="tag">{{ allocation.assetType }}</span>
+                <span class="tag">{{ allocation.riskLevel }} risk</span>
+              </div>
+
+              <div class="asset-price-row">
+                <span>Current Price</span>
+                <strong>
+                  {{ allocation.currentPrice | currency:'OMR':'code':'1.3-3' }}
+                </strong>
+              </div>
+
+              <div class="asset-allocation-row">
+
+                <div class="percentage-input">
+                  <label>Allocation</label>
+                  <div class="percentage-field">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      [(ngModel)]="allocation.percentage"
+                      (ngModelChange)="allocationChanged()"
+                    />
+                    <span>%</span>
+                  </div>
+                </div>
+
+                <div class="monthly-amount">
+                  <span>Monthly Investment</span>
+                  <strong>
+                    {{
+                      getMonthlyAmount(allocation.percentage)
+                        | currency:'OMR':'code':'1.3-3'
+                    }}
+                  </strong>
+                </div>
+
+              </div>
+
+            </article>
+          }
+
+        </div>
+      }
+
+    </section>
+
+    <!-- Section 4: Total allocation -->
+    <section class="card total-card">
+
+      <div class="allocation-header">
+        <span class="section-label">Total Allocation</span>
+        <div
+          class="allocation-total"
+          [class.invalid]="!allocationIsValid"
+        >
+          {{ totalPercentage | number:'1.0-2' }}%
+        </div>
+      </div>
+
+      <div class="allocation-progress">
+        <div
+          class="allocation-progress-fill"
+          [class.invalid]="!allocationIsValid"
+          [style.width.%]="totalPercentage > 100 ? 100 : totalPercentage"
+        ></div>
+      </div>
+
+      @if (!allocationIsValid) {
+        <p class="allocation-error">
+          Allocation must equal exactly 100%.
+        </p>
+      }
+
+    </section>
+
+    <!-- Section 5: AI Suggestion -->
+    <section class="card ai-card">
+
+      <button
+        type="button"
+        class="btn-ai"
+        [disabled]="aiLoading"
+        (click)="suggestWithAi()"
+      >
+        {{ aiLoading ? 'Generating suggestion...' : '✦ Suggest Allocation with AI' }}
+      </button>
+
+      @if (aiExplanation) {
+        <div class="ai-explanation">
+          <strong>✦ AI explanation</strong>
+          <p>{{ aiExplanation }}</p>
+        </div>
+      }
+
+    </section>
+
+    <!-- Section 6: Save -->
+    <section class="save-section">
+      <button
+        type="button"
+        class="btn-save"
+        [disabled]="
+          saving ||
+          !allocationIsValid ||
+          monthlyInvestmentAmount <= 0 ||
+          allocations.length === 0
+        "
+        (click)="savePlan()"
+      >
+        {{ saving ? 'Saving investment plan...' : 'Save Investment Plan' }}
+      </button>
+    </section>
+
+  }
+
+</main>

@@ -65,6 +65,7 @@
                 <th>Type</th>
                 <th>Price</th>
                 <th>Currency</th>
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -96,7 +97,10 @@
                       discoveredAsset.currentPrice !== undefined &&
                       discoveredAsset.currentPrice > 0
                     ) {
-                      {{ discoveredAsset.currentPrice | number:'1.3-3' }}
+                      {{
+                        discoveredAsset.currentPrice
+                          | number:'1.3-3'
+                      }}
                     } @else {
                       <span class="price-unavailable">
                         Not available
@@ -105,10 +109,30 @@
                   </td>
 
                   <td>
-                   OMR
+                    OMR
                   </td>
 
-                  
+                  <td>
+                    <button
+                      type="button"
+                      class="btn-add"
+                      [disabled]="
+                        isAdding(discoveredAsset.symbol) ||
+                        isAdded(discoveredAsset.symbol)
+                      "
+                      (click)="addToCatalog(discoveredAsset)"
+                    >
+                      @if (isAdding(discoveredAsset.symbol)) {
+                        Adding...
+                      } @else if (
+                        isAdded(discoveredAsset.symbol)
+                      ) {
+                        ✓ Added
+                      } @else {
+                        Add to catalog
+                      }
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -120,4 +144,3 @@
   </section>
 
 </main>
-
