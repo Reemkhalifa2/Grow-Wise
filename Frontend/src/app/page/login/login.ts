@@ -1,126 +1,106 @@
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject } from '@angular/core';import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Auth } from '../../services/auth';
+import { GoogleSdkService } from '../../services/google-sdk.service';
+
+declare const google: any;
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly authService = inject(Auth);
-  private readonly router = inject(Router);
-private readonly changeDetector = inject(ChangeDetectorRef);
+export class Login implements OnInit {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private ngZone = inject(NgZone);
+  private googleSdk = inject(GoogleSdkService);
+
+  loginForm: FormGroup = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]]
+  });
+
   loading = false;
   showPassword = false;
   errorMessage = '';
-
   toastMessage = '';
   toastIsError = false;
 
-  readonly loginForm = this.formBuilder.group({
-    email: [
-      '',
-      [
-        Validators.required,
-        Validators.email
-      ]
-    ],
-    password: [
-      '',
-      Validators.required
-    ]
-  });
+  private clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+  private tokenClient: any;
 
-  login(): void {
-    this.errorMessage = '';
+  ngOnInit(): void {
+    // Pre-load script on init so it's ready when user clicks
+    this.googleSdk.loadScript()
+      .then(() => this.initGoogleClient())
+      .catch(() => console.warn('Google SDK failed to pre-load.'));
+  }
 
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
+  private initGoogleClient(): void {
+    if (this.tokenClient || typeof google === 'undefined') return;
+
+    this.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: this.clientId,
+      scope: 'email profile openid',
+      callback: (response: any) => this.handleGoogleResponse(response)
+    });
+  }
+
+  async continueWithGoogle(): Promise<void> {
+    if (this.loading) return;
+
+    try {
+      // Ensure SDK is ready before executing trigger
+      await this.googleSdk.loadScript();
+      this.initGoogleClient();
+
+      if (this.tokenClient) {
+        this.tokenClient.requestAccessToken();
+      } else {
+        this.showToast('Unable to initialize Google Sign-In.', true);
+      }
+    } catch (err) {
+      this.showToast('Google SDK failed to load. Check ad-blockers.', true);
     }
+  }
 
-    const request = {
-      email: this.loginForm.controls.email.value!,
-      password: this.loginForm.controls.password.value!
-    };
+  private handleGoogleResponse(response: any): void {
+    this.ngZone.run(() => {
+      if (response.error) {
+        this.errorMessage = 'Google sign-in was canceled or failed.';
+        return;
+      }
 
-    this.loading = true;
-
-    this.authService
-      .login(request)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-        })
-      )
-      .subscribe({
-        next: response => {
-          this.authService.saveSession(response);
-           const role = response.role?.toUpperCase();
-
-          if (role === 'ADMIN') {
-            this.router.navigate(['/admin-dashboard']);
-          } else {
-            this.router.navigate(['/dashboard']);
-          }
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Login failed:', error);
-
-          if (error.status === 401 || error.status === 403) {
-            this.errorMessage = 'Incorrect email or password.';
-          } else if (error.status === 0) {
-            this.errorMessage = 'Cannot connect to the server.';
-          } else {
-            this.errorMessage =
-              error.error?.message ?? 'Login failed. Please try again.';
-          }
-
-          this.showToast(this.errorMessage, true);
-          this.changeDetector.detectChanges();
-        }
-      });
+      const accessToken = response.access_token;
+      this.loading = true;
+      console.log('Google Access Token:', accessToken);
+    });
   }
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
 
-  continueWithGoogle(): void {
-    window.open(
-      'http://localhost:8080/oauth2/authorization/google',
-      'google-login',
-      'width=500,height=650'
-    );
+  isInvalid(controlName: string): boolean {
+    const control = this.loginForm.get(controlName);
+    return !!(control && control.invalid && control.touched);
   }
 
-  isInvalid(controlName: 'email' | 'password'): boolean {
-    const control = this.loginForm.controls[controlName];
-    return control.invalid && control.touched;
+  login(): void {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+    this.loading = true;
   }
 
-  private showToast(message: string, isError: boolean): void {
+  showToast(message: string, isError = false): void {
     this.toastMessage = message;
     this.toastIsError = isError;
-
-    setTimeout(() => {
-      this.toastMessage = '';
-      this.toastIsError = false;
-    }, 3000);
+    setTimeout(() => { this.toastMessage = ''; }, 3000);
   }
 }
