@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
@@ -19,6 +19,7 @@ import { TaskRequest, TaskResponse } from '../../models/task';
 export class TaskComponent implements OnInit {
 
   private readonly taskService = inject(TaskService);
+  private readonly cdr = inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
 
   tasks: TaskResponse[] = [];
   loading = true;
@@ -33,73 +34,52 @@ export class TaskComponent implements OnInit {
     completed: false
   };
 
-  /**
-   * Tries several common places apps store the logged-in user's id, so this
-   * works regardless of exactly how the login page saved it. Checks both
-   * localStorage and sessionStorage, under several common key names.
-   */
   private get userId(): number {
     const stores = [localStorage, sessionStorage];
 
-    // 1) A direct numeric id under a common key name.
+    // 1) Direct numeric id check
     const directKeys = ['userId', 'id', 'user_id'];
     for (const store of stores) {
       for (const key of directKeys) {
         const value = Number(store.getItem(key));
-        if (value > 0) {
-          return value;
-        }
+        if (value > 0) return value;
       }
     }
 
-    // 2) A user/auth object (JSON) with an .id / .userId field.
+    // 2) User object check
     const objectKeys = ['user', 'currentUser', 'authUser', 'loggedInUser'];
     for (const store of stores) {
       for (const key of objectKeys) {
         const raw = store.getItem(key);
-        if (!raw) {
-          continue;
-        }
-
+        if (!raw) continue;
         try {
           const parsed = JSON.parse(raw);
           const id = Number(parsed?.id ?? parsed?.userId);
-          if (id > 0) {
-            return id;
-          }
+          if (id > 0) return id;
         } catch {
           // not JSON, ignore
         }
       }
     }
 
-    // 3) Decode a JWT stored under a common token key and read its claims.
+    // 3) JWT check
     const tokenKeys = ['token', 'authToken', 'accessToken', 'jwt'];
     for (const store of stores) {
       for (const key of tokenKeys) {
         const token = store.getItem(key);
-        if (!token || !token.includes('.')) {
-          continue;
-        }
-
+        if (!token || !token.includes('.')) continue;
         try {
           const payload = token.split('.')[1];
           const decoded = JSON.parse(atob(payload));
           const id = Number(decoded?.id ?? decoded?.userId ?? decoded?.sub);
-          if (id > 0) {
-            return id;
-          }
+          if (id > 0) return id;
         } catch {
           // not a valid JWT, ignore
         }
       }
     }
 
-    console.warn(
-      'Could not determine the logged-in user id. ' +
-      'Run `JSON.stringify(localStorage)` and `JSON.stringify(sessionStorage)` in the console ' +
-      'to see what is actually stored after login.'
-    );
+    console.warn('Could not determine logged-in user id.');
     return 0;
   }
 
@@ -115,15 +95,17 @@ export class TaskComponent implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
+          this.cdr.detectChanges(); // 2. Trigger detection when loading completes
         })
       )
       .subscribe({
         next: tasks => {
           this.tasks = tasks;
+          this.cdr.detectChanges(); // 3. Ensure list updates on screen instantly
         },
-
         error: error => {
           console.error('Failed to load tasks:', error);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -188,9 +170,7 @@ export class TaskComponent implements OnInit {
   deleteTask(task: TaskResponse): void {
     const confirmed = window.confirm(`Delete "${task.title}"?`);
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     this.taskService
       .delete(this.userId, task.id)

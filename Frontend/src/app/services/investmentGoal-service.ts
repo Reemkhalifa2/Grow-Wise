@@ -14,6 +14,9 @@ import {
   providedIn: 'root'
 })
 export class investmentGoalService {
+  listByUser(userId: number): any {
+    throw new Error('Method not implemented.');
+  }
 
   private readonly apiUrl =
     'http://localhost:8080/api/financial-goals';

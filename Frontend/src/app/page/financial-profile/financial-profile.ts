@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -9,10 +14,7 @@ import {
 
 import { AuthService } from '../../services/auth.service';
 import { FinancialProfileService } from '../../services/financial-profile.service';
-import {
-  FinancialProfileRequest,
-  
-} from '../../models/financial-profile.models';
+import { FinancialProfileRequest } from '../../models/financial-profile.models';
 
 @Component({
   selector: 'app-financial-profile',
@@ -26,6 +28,11 @@ import {
 })
 export class FinancialProfile implements OnInit {
 
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly profileService = inject(FinancialProfileService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   profileForm: FormGroup;
 
   isLoading = false;
@@ -34,13 +41,7 @@ export class FinancialProfile implements OnInit {
   successMessage = '';
   errorMessage = '';
 
-  
-
-  constructor(
-    private readonly formBuilder: FormBuilder,
-    private readonly authService: AuthService,
-    private readonly profileService: FinancialProfileService
-  ) {
+  constructor() {
     this.profileForm = this.formBuilder.group({
       monthlySalary: [
         null,
@@ -49,17 +50,13 @@ export class FinancialProfile implements OnInit {
           Validators.min(0)
         ]
       ],
-
       monthlyExpenses: [
         null,
         [
           Validators.required,
           Validators.min(0)
         ]
-      ],
-
-      
-      
+      ]
     });
   }
 
@@ -72,51 +69,44 @@ export class FinancialProfile implements OnInit {
 
     if (userId === null) {
       this.errorMessage = 'User session was not found.';
+      this.cdr.markForCheck();
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     this.profileService.getProfile(userId).subscribe({
       next: profile => {
-        this.profileForm.patchValue({
-          monthlySalary: profile.monthlySalary,
-          monthlyExpenses: profile.monthlyExpenses,
-   
-    
-        });
-
+        if (profile) {
+          this.profileForm.patchValue({
+            monthlySalary: profile.monthlySalary,
+            monthlyExpenses: profile.monthlyExpenses
+          });
+        }
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
 
       error: error => {
-        /*
-         * A 404 can mean that this is the first time
-         * the user creates a financial profile.
-         */
         if (error.status !== 404) {
-          this.errorMessage =
-            'Unable to load your financial profile.';
+          this.errorMessage = 'Unable to load your financial profile.';
         }
-
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
-
-  
 
   saveProfile(): void {
     this.successMessage = '';
     this.errorMessage = '';
 
-    console.log('Form value:', this.profileForm.getRawValue());
-  console.log('Form valid:', this.profileForm.valid);
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
-      this.errorMessage =
-        'Please complete all required fields.';
+      this.errorMessage = 'Please complete all required fields.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -124,47 +114,43 @@ export class FinancialProfile implements OnInit {
 
     if (userId === null) {
       this.errorMessage = 'User session was not found.';
+      this.cdr.markForCheck();
       return;
     }
 
     const request: FinancialProfileRequest = {
-      monthlySalary:
-        Number(this.profileForm.value.monthlySalary),
-
-      monthlyExpenses:
-        Number(this.profileForm.value.monthlyExpenses)
-
-      
-
+      monthlySalary: Number(this.profileForm.value.monthlySalary),
+      monthlyExpenses: Number(this.profileForm.value.monthlyExpenses)
     };
 
     if (request.monthlyExpenses > request.monthlySalary) {
-      this.errorMessage =
-        'Monthly expenses cannot be greater than monthly salary.';
+      this.errorMessage = 'Monthly expenses cannot be greater than monthly salary.';
+      this.cdr.markForCheck();
       return;
     }
 
     this.isSaving = true;
+    this.cdr.markForCheck();
 
     this.profileService
       .saveProfile(userId, request)
       .subscribe({
         next: response => {
-          this.profileForm.patchValue(response);
+          if (response) {
+            this.profileForm.patchValue(response);
+          }
 
-          this.successMessage =
-            'Financial profile saved successfully.';
-
+          this.successMessage = 'Financial profile saved successfully.';
           this.isSaving = false;
+          this.cdr.markForCheck(); // Explicitly trigger re-render on save
         },
 
         error: error => {
-        console.error('Saving failed:', error);
-
-        this.errorMessage =
-          error.error?.message ??
-          'Unable to save financial profile.';
-      }
-    });
+          console.error('Saving failed:', error);
+          this.errorMessage = error.error?.message ?? 'Unable to save financial profile.';
+          this.isSaving = false;
+          this.cdr.markForCheck();
+        }
+      });
   }
 }
