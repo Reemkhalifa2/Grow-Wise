@@ -1,10 +1,12 @@
-
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { AssetService } from '../../services/assets';
-import { MarketDiscovery } from '../../models/assets';
+import {
+  MarketDiscovery,
+  RiskLevel
+} from '../../models/assets';
 
 @Component({
   selector: 'app-asset-management',
@@ -22,6 +24,9 @@ export class AssetManagement implements OnInit {
   discoveredAssets: MarketDiscovery[] = [];
 
   loading = false;
+
+  addingSymbols = new Set<string>();
+  addedSymbols = new Set<string>();
 
   toastMessage = '';
   toastIsError = false;
@@ -59,7 +64,62 @@ export class AssetManagement implements OnInit {
       });
   }
 
+  addToCatalog(
+    asset: MarketDiscovery,
+    riskLevel: RiskLevel = 'MEDIUM'
+  ): void {
+
+    if (
+      this.addingSymbols.has(asset.symbol) ||
+      this.addedSymbols.has(asset.symbol)
+    ) {
+      return;
+    }
+
+    this.addingSymbols.add(asset.symbol);
+
+    this.assetService
+      .addToCatalog(asset, riskLevel)
+      .pipe(
+        finalize(() => {
+          this.addingSymbols.delete(asset.symbol);
+        })
+      )
+      .subscribe({
+        next: createdAsset => {
+          this.addedSymbols.add(asset.symbol);
+
+          this.showToast(
+            `${createdAsset.name} added to catalog.`,
+            false
+          );
+        },
+
+        error: error => {
+          console.error(
+            'Failed to add asset to catalog:',
+            error
+          );
+
+          this.showToast(
+            error?.error?.message ||
+            `Failed to add ${asset.name}.`,
+            true
+          );
+        }
+      });
+  }
+
+  isAdding(symbol: string): boolean {
+    return this.addingSymbols.has(symbol);
+  }
+
+  isAdded(symbol: string): boolean {
+    return this.addedSymbols.has(symbol);
+  }
+
   refreshDiscovery(): void {
+    this.addedSymbols.clear();
     this.loadDiscoveredAssets();
   }
 
@@ -83,4 +143,3 @@ export class AssetManagement implements OnInit {
     }, 4000);
   }
 }
-

@@ -1,5 +1,6 @@
 package com.example.InvestmentGoalManagementPlatform.DTO;
 
+import com.example.InvestmentGoalManagementPlatform.entity.Asset;
 import com.example.InvestmentGoalManagementPlatform.entity.Investment;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 public class InvestmentDTO {
 
-    private Integer id; // response-only, ignored on create/update requests
+    private Integer id;
 
     @NotNull(message = "Amount invested is required")
     @Min(value = 0, message = "Amount invested cannot be negative")
@@ -41,14 +42,18 @@ public class InvestmentDTO {
     @NotNull(message = "Investment plan ID is required")
     private Integer planId;
 
-    @NotNull(message = "Stock ID is required")
-    private Integer stockId;
+    @NotNull(message = "Asset ID is required")
+    private Integer assetId;
 
-    private String stockTickerSymbol;
+    private String assetName;
+    private String assetSymbol;
+    private String assetType;
+    private String riskLevel;
+
     private Double currentValue;
     private Double profitOrLoss;
 
-    public Investment toEntity() { // For Creating
+    public Investment toEntity() {
         Investment investment = new Investment();
 
         investment.setAmountInvested(amountInvested);
@@ -59,38 +64,135 @@ public class InvestmentDTO {
         return investment;
     }
 
-    public void applyTo(Investment investment) { // For Updating
+    public void applyTo(
+            Investment investment
+    ) {
         investment.setAmountInvested(amountInvested);
         investment.setQuantity(quantity);
         investment.setPurchasePrice(purchasePrice);
         investment.setPurchaseDate(purchaseDate);
     }
 
-    public static InvestmentDTO fromEntity(Investment investment) {
-        InvestmentDTO dto = new InvestmentDTO();
+    public static InvestmentDTO fromEntity(
+            Investment investment
+    ) {
+        InvestmentDTO dto =
+                new InvestmentDTO();
 
         dto.setId(investment.getId());
-        dto.setAmountInvested(investment.getAmountInvested());
-        dto.setQuantity(investment.getQuantity());
-        dto.setPurchasePrice(investment.getPurchasePrice());
-        dto.setPurchaseDate(investment.getPurchaseDate());
-        dto.setUserId(investment.getUser().getId());
-        dto.setPlanId(investment.getInvestmentPlan().getId());
-        dto.setStockId(investment.getStock().getId());
-        dto.setStockTickerSymbol(investment.getStock().getTickerSymbol());
 
-        Double currentValue = investment.getStock().getCurrentPrice() * investment.getQuantity();
-        dto.setCurrentValue(currentValue);
-        dto.setProfitOrLoss(currentValue - investment.getAmountInvested());
+        dto.setAmountInvested(
+                investment.getAmountInvested()
+        );
+
+        dto.setQuantity(
+                investment.getQuantity()
+        );
+
+        dto.setPurchasePrice(
+                investment.getPurchasePrice()
+        );
+
+        dto.setPurchaseDate(
+                investment.getPurchaseDate()
+        );
+
+        if (investment.getUser() != null) {
+            dto.setUserId(
+                    investment.getUser().getId()
+            );
+        }
+
+        if (
+                investment.getInvestmentPlan() != null
+        ) {
+            dto.setPlanId(
+                    investment
+                            .getInvestmentPlan()
+                            .getId()
+            );
+        }
+
+        Asset asset =
+                investment.getAsset();
+
+        if (asset != null) {
+            dto.setAssetId(asset.getId());
+            dto.setAssetName(asset.getName());
+            dto.setAssetSymbol(asset.getSymbol());
+
+            dto.setAssetType(
+                    asset.getAssetType() == null
+                            ? null
+                            : asset.getAssetType().name()
+            );
+
+            dto.setRiskLevel(
+                    asset.getRiskLevel() == null
+                            ? null
+                            : asset.getRiskLevel().name()
+            );
+
+            double quantity =
+                    investment.getQuantity() == null
+                            ? 1.0
+                            : investment.getQuantity();
+
+            double currentPrice =
+                    asset.getCurrentPrice() == null
+                            ? 0.0
+                            : asset.getCurrentPrice();
+
+            double currentValue =
+                    currentPrice * quantity;
+
+            dto.setCurrentValue(currentValue);
+
+            double investedAmount =
+                    investment.getAmountInvested() == null
+                            ? 0.0
+                            : investment.getAmountInvested();
+
+            dto.setProfitOrLoss(
+                    currentValue - investedAmount
+            );
+        } else {
+            dto.setCurrentValue(0.0);
+
+            dto.setProfitOrLoss(
+                    -safeDouble(
+                            investment.getAmountInvested()
+                    )
+            );
+        }
 
         return dto;
     }
 
-    public static List<InvestmentDTO> fromEntity(List<Investment> investments) {
-        List<InvestmentDTO> investmentDTOList = new ArrayList<>();
-        for (Investment investment : investments) {
-            investmentDTOList.add(fromEntity(investment));
+    public static List<InvestmentDTO> fromEntity(
+            List<Investment> investments
+    ) {
+        List<InvestmentDTO> dtoList =
+                new ArrayList<>();
+
+        if (investments == null) {
+            return dtoList;
         }
-        return investmentDTOList;
+
+        for (Investment investment : investments) {
+            dtoList.add(
+                    fromEntity(investment)
+            );
+        }
+
+        return dtoList;
+    }
+
+    private static double safeDouble(
+            Double value
+    ) {
+        return value == null
+                ? 0.0
+                : value;
     }
 }

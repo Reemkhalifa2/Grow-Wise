@@ -18,8 +18,14 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
             Integer investmentId
     );
 
+    @Query("""
+    SELECT i
+    FROM Investment i
+    WHERE i.user.id = :userId
+      AND i.isActive = true
+""")
     List<Investment> findByUserIdAndIsActiveTrue(
-            Integer userId
+            @Param("userId") Integer userId
     );
 
     List<Investment> findByInvestmentPlanIdAndIsActiveTrue(

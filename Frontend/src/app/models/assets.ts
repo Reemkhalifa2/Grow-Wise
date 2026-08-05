@@ -1,15 +1,25 @@
-
-export type AssetType = 'STOCK' | 'GOLD' | 'MUTUAL_FUND';
-
-
-/**
- * Mirrors AssetAdminResponseDTO returned by GET /api/admin/assets
- */
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface MarketDiscovery {
   name: string;
   symbol: string;
-  assetType: AssetType;
+  assetType: string;
   currentPrice: number;
-  source: string;
+
+  oneYearReturn?: number;
+  threeYearReturn?: number;
+  fiveYearReturn?: number;
+
+  source?: string;
+  asOfDate?: string;
+}
+
+export interface Asset {
+  id: number;
+  name: string;
+  symbol: string;
+  assetType: string;
+  currentPrice: number;
+  riskLevel: RiskLevel;
+  active?: boolean;
 }

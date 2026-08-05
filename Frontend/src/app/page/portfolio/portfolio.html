@@ -1,0 +1,339 @@
+<div
+  class="toast"
+  [class.show]="toastMessage"
+  [class.error-toast]="toastIsError"
+>
+  {{ toastMessage }}
+</div>
+
+<main class="portfolio-page">
+
+  <header class="page-header">
+
+    <div>
+      <span class="eyebrow">
+        Investment tracking
+      </span>
+
+      <h1>My portfolio</h1>
+
+      <p>
+        View your investment plans, current values,
+        and monthly investment activity.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-refresh"
+      [disabled]="loading"
+      (click)="loadPortfolio()"
+    >
+      {{
+        loading
+          ? 'Refreshing...'
+          : 'Refresh portfolio'
+      }}
+    </button>
+
+  </header>
+
+  @if (loading) {
+
+    <section class="state-card">
+      Loading your portfolio...
+    </section>
+
+  } @else if (plans.length === 0) {
+
+    <section class="state-card empty-state">
+
+      <div class="empty-icon">◇</div>
+
+      <h2>No investments yet</h2>
+
+      <p>
+        Create an investment plan to begin
+        tracking your portfolio.
+      </p>
+
+    </section>
+
+  } @else {
+
+    <section class="portfolio-summary">
+
+      <article class="summary-card">
+        <span>Total plans</span>
+        <strong>{{ plans.length }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>Total invested</span>
+
+        <strong>
+          {{
+            totalPortfolioInvested
+              | currency:'OMR':'code':'1.3-3'
+          }}
+        </strong>
+      </article>
+
+      <article class="summary-card">
+        <span>Current value</span>
+
+        <strong>
+          {{
+            totalPortfolioValue
+              | currency:'OMR':'code':'1.3-3'
+          }}
+        </strong>
+      </article>
+
+      <article class="summary-card">
+        <span>Total profit/loss</span>
+
+        <strong
+          [class.positive-value]="
+            totalProfitOrLoss >= 0
+          "
+          [class.negative-value]="
+            totalProfitOrLoss < 0
+          "
+        >
+          {{
+            totalProfitOrLoss
+              | currency:'OMR':'code':'1.3-3'
+          }}
+        </strong>
+      </article>
+
+    </section>
+
+    <section class="portfolio-grid">
+
+      @for (
+        plan of plans;
+        track plan.planId
+      ) {
+
+        <article class="portfolio-card">
+
+          <header class="plan-header">
+
+            <div>
+              <span class="plan-label">
+                Investment plan
+              </span>
+
+              <h2>
+                Plan #{{ plan.planId }}
+              </h2>
+            </div>
+
+            <span class="status-badge">
+              ACTIVE
+            </span>
+
+          </header>
+
+          <section class="plan-metrics">
+
+            <article>
+              <span>Total invested</span>
+
+              <strong>
+                {{
+                  plan.totalInvested
+                    | currency:'OMR':'code':'1.3-3'
+                }}
+              </strong>
+            </article>
+
+            <article>
+              <span>Current value</span>
+
+              <strong>
+                {{
+                  plan.currentValue
+                    | currency:'OMR':'code':'1.3-3'
+                }}
+              </strong>
+            </article>
+
+            <article>
+              <span>Profit/loss</span>
+
+              <strong
+                [class.positive-value]="
+                  plan.profitOrLoss >= 0
+                "
+                [class.negative-value]="
+                  plan.profitOrLoss < 0
+                "
+              >
+                {{
+                  plan.profitOrLoss
+                    | currency:'OMR':'code':'1.3-3'
+                }}
+              </strong>
+            </article>
+
+          </section>
+
+          <section class="investments-section">
+
+            <div class="section-heading">
+
+              <div>
+                <span class="section-label">
+                  Portfolio assets
+                </span>
+
+                <h3>Assets</h3>
+              </div>
+
+              <strong>
+                {{ plan.assets.length }}
+                asset{{
+                  plan.assets.length === 1
+                    ? ''
+                    : 's'
+                }}
+              </strong>
+
+            </div>
+
+            <div class="investment-list">
+
+              @for (
+                asset of plan.assets;
+                track asset.assetId
+              ) {
+
+                <article class="investment-row">
+
+                  <div class="asset-details">
+
+                    <span class="asset-icon">
+                      ↗
+                    </span>
+
+                    <div>
+                      <strong>
+                        {{ asset.assetName }}
+                      </strong>
+
+                      <span>
+                        {{ asset.assetSymbol }}
+                        · {{ asset.assetType }}
+                        · {{ asset.riskLevel }} risk
+                      </span>
+                    </div>
+
+                  </div>
+
+                  <div class="investment-data">
+
+                    <div>
+                      <span>Total invested</span>
+
+                      <strong>
+                        {{
+                          asset.totalInvested
+                            | currency:'OMR':'code':'1.3-3'
+                        }}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Current value</span>
+
+                      <strong>
+                        {{
+                          asset.currentValue
+                            | currency:'OMR':'code':'1.3-3'
+                        }}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Profit</span>
+
+                      <strong
+                        [class.positive-value]="
+                          asset.profitOrLoss >= 0
+                        "
+                        [class.negative-value]="
+                          asset.profitOrLoss < 0
+                        "
+                      >
+                        {{
+                          asset.profitOrLoss
+                            | currency:'OMR':'code':'1.3-3'
+                        }}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Months invested</span>
+
+                      <strong>
+                        {{ asset.monthsInvested }}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Last investment</span>
+
+                      <strong>
+                        {{
+                          asset.lastInvestmentDate
+                            | date:'mediumDate'
+                        }}
+                      </strong>
+                    </div>
+
+                  </div>
+
+                </article>
+
+              }
+
+            </div>
+
+          </section>
+
+          <footer class="plan-footer">
+
+            <p>
+              Complete this month's investment
+              according to Plan #{{ plan.planId }}.
+            </p>
+
+            <button
+              type="button"
+              class="btn-complete"
+              [disabled]="
+                completingPlanId === plan.planId
+              "
+              (click)="completeMonth(plan)"
+            >
+              {{
+                completingPlanId === plan.planId
+                  ? 'Completing...'
+                  : 'Complete this month'
+              }}
+            </button>
+
+          </footer>
+
+        </article>
+
+      }
+
+    </section>
+
+  }
+
+</main>

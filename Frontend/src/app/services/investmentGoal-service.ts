@@ -1,32 +1,81 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpParams
+} from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
-  investmentGoalRequest,
-  investmentGoalResponse
+  InvestmentGoalRequest,
+  InvestmentGoalResponse
 } from '../models/investmentGoal-models';
 
-
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class investmentGoalService {
-  private readonly apiUrl = 'http://localhost:8080/api/goals';
-goalName: any;
-id: any;
-targetAmount: string | number | undefined;
-currentAmount: string | number | undefined;
-progressPercentage: string | number | undefined;
-status: any;
 
-  constructor(private http: HttpClient) {}
+  private readonly apiUrl =
+    'http://localhost:8080/api/financial-goals';
 
-  list(): Observable<investmentGoalResponse[]> {
-    return this.http.get<investmentGoalResponse[]>(this.apiUrl);
+  constructor(
+    private readonly http: HttpClient
+  ) {}
+
+  create(
+    request: InvestmentGoalRequest
+  ): Observable<InvestmentGoalResponse> {
+    return this.http.post<InvestmentGoalResponse>(
+      this.apiUrl,
+      request
+    );
   }
 
-  save(goal: investmentGoalRequest): Observable<investmentGoalResponse> {
-    return this.http.post<investmentGoalResponse>(this.apiUrl, goal);
+  getById(
+    goalId: number
+  ): Observable<InvestmentGoalResponse> {
+    return this.http.get<InvestmentGoalResponse>(
+      `${this.apiUrl}/${goalId}`
+    );
+  }
+
+  getByUserId(
+    userId: number
+  ): Observable<InvestmentGoalResponse[]> {
+    const params = new HttpParams()
+      .set('userId', userId.toString());
+
+    return this.http.get<InvestmentGoalResponse[]>(
+      this.apiUrl,
+      { params }
+    );
+  }
+
+  update(
+    goalId: number,
+    request: InvestmentGoalRequest
+  ): Observable<InvestmentGoalResponse> {
+    return this.http.put<InvestmentGoalResponse>(
+      `${this.apiUrl}/${goalId}`,
+      request
+    );
+  }
+
+  contribute(
+    goalId: number,
+    amount: number
+  ): Observable<InvestmentGoalResponse> {
+    return this.http.post<InvestmentGoalResponse>(
+      `${this.apiUrl}/${goalId}/contribute`,
+      { amount }
+    );
+  }
+
+  delete(
+    goalId: number
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/${goalId}`
+    );
   }
 }

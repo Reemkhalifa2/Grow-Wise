@@ -1,5 +1,6 @@
 package com.example.InvestmentGoalManagementPlatform.controller;
 
+import com.example.InvestmentGoalManagementPlatform.DTO.AvailableAssetDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.MarketDiscoveryDTO;
 import com.example.InvestmentGoalManagementPlatform.entity.Asset;
 import com.example.InvestmentGoalManagementPlatform.utility.RiskLevel;
@@ -33,5 +34,14 @@ public class MarketDiscoveryController {
 
         Asset created = discoveryService.addDiscoveredAssetToCatalog(dto, riskLevel);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/assets/available")
+    public ResponseEntity<List<AvailableAssetDTO>>
+    getAvailableAssets() {
+
+        return ResponseEntity.ok(
+                discoveryService.getAvailableAssets()
+        );
     }
 }

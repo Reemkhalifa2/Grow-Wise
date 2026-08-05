@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 public class InvestmentPlanResponseDTO {
 
-    private String planType;
 
     private Double targetAmount;
     private Integer timelineMonths;
@@ -56,7 +55,6 @@ public class InvestmentPlanResponseDTO {
                         .toList();
 
         return InvestmentPlanResponseDTO.builder()
-                .planType("SAVED_PLAN")
                 .targetAmount(plan.getTargetAmount())
                 .timelineMonths(plan.getDurationMonths())
                 .monthlyInvestmentAmount(plan.getMonthlyInvestmentAmount())

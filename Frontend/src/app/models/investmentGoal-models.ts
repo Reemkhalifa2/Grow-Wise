@@ -1,6 +1,6 @@
 export type GoalStatus =
   | 'ACTIVE'
-  | 'COMPLETED'
+  | 'ACHIEVED'
   | 'CANCELLED';
 
 export type GoalRiskLevel =
@@ -8,7 +8,7 @@ export type GoalRiskLevel =
   | 'MEDIUM'
   | 'HIGH';
 
-export interface investmentGoalRequest {
+export interface InvestmentGoalRequest {
   goalName: string;
   targetAmount: number;
   currentAmount: number;
@@ -18,7 +18,7 @@ export interface investmentGoalRequest {
   userId: number;
 }
 
-export interface investmentGoalResponse {
+export interface InvestmentGoalResponse {
   id: number;
   goalName: string;
   targetAmount: number;

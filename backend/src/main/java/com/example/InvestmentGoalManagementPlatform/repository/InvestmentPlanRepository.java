@@ -3,6 +3,8 @@ package com.example.InvestmentGoalManagementPlatform.repository;
 import com.example.InvestmentGoalManagementPlatform.entity.Investment;
 import com.example.InvestmentGoalManagementPlatform.entity.InvestmentPlan;
 import java.util.Optional;
+
+import com.example.InvestmentGoalManagementPlatform.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,6 +37,7 @@ public interface InvestmentPlanRepository extends JpaRepository<InvestmentPlan, 
             Integer planId,
             Integer userId
     );
+    List<InvestmentPlan> findByUser(User user);
 }
 
 
