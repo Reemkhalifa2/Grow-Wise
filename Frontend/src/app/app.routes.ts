@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { Login } from './page/login/login';
-import { Register } from './page/Register/Register';
+import { Register } from './page/register/register';
 import { UserDashboard } from './page/user-dashboard/user-dashboard';
 import { FinancialProfile } from './page/financial-profile/financial-profile';
 import { AdminDashboard } from './page/dashboard/dashboard';

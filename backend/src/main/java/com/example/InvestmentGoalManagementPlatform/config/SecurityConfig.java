@@ -45,8 +45,6 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-                .oauth2Login(Customizer.withDefaults())
                 .cors(cors -> cors.configurationSource(
                         corsConfigurationSource()
                 ))

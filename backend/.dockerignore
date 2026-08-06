@@ -1,0 +1,4 @@
+target/*.original
+.idea
+.git
+.gitignore

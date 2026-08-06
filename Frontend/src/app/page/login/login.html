@@ -127,13 +127,13 @@
 
         <div class="error-text">
           @if (
-            loginForm.controls.email.touched &&
-            loginForm.controls.email.hasError('required')
+            loginForm.controls['email'].touched &&
+            loginForm.controls['email'].hasError('required')
           ) {
             Email is required.
           } @else if (
-            loginForm.controls.email.touched &&
-            loginForm.controls.email.hasError('email')
+            loginForm.controls['email'].touched &&
+            loginForm.controls['email'].hasError('email')
           ) {
             Enter a valid email address.
           }
@@ -203,13 +203,13 @@
         </div>
 
         <div class="error-text">
-          @if (
-            loginForm.controls.password.touched &&
-            loginForm.controls.password.hasError('required')
-          ) {
-            Password is required.
-          }
-        </div>
+  @if (
+    loginForm.controls['password'].touched &&
+    loginForm.controls['password'].hasError('required')
+  ) {
+    Password is required.
+  }
+</div>
       </div>
 
       @if (errorMessage) {
@@ -234,15 +234,3 @@
   </p>
 </main>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script>
-  window.opener.postMessage({
-    type: 'OAUTH_RESPONSE',
-    payload: {
-      token: "YOUR_JWT_TOKEN",
-      role: "USER"
-    }
-  }, 'http://localhost:4200');
-  window.close();
-</script>
-</main>
