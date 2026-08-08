@@ -5,6 +5,9 @@ import { Observable } from 'rxjs';
 import { RegisterRequest } from '../models/register-request';
 import { LoginRequest } from '../models/auth.models';
 import { AuthResponse } from '../models/auth.models';
+import { ForgotPasswordRequest } from '../models/auth.models';
+import { ForgotPasswordResponse } from '../models/auth.models';
+import { ResetPasswordRequest } from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root',
@@ -37,6 +40,21 @@ export class Auth {
     return this.http.post<AuthResponse>(
       `${this.apiUrl}/google`,
       { idToken }
+    );
+  }
+
+  forgotPassword(data: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(
+      `${this.apiUrl}/forgot-password`,
+      data
+    );
+  }
+
+  resetPassword(data: ResetPasswordRequest): Observable<string> {
+    return this.http.post(
+      `${this.apiUrl}/reset-password`,
+      data,
+      { responseType: 'text' }
     );
   }
 

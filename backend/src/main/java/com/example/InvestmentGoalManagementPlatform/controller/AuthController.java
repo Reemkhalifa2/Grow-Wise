@@ -1,9 +1,12 @@
 package com.example.InvestmentGoalManagementPlatform.controller;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.AuthResponse;
+import com.example.InvestmentGoalManagementPlatform.DTO.ForgotPasswordRequest;
+import com.example.InvestmentGoalManagementPlatform.DTO.ForgotPasswordResponse;
 import com.example.InvestmentGoalManagementPlatform.DTO.GoogleLoginRequest;
 import com.example.InvestmentGoalManagementPlatform.DTO.LoginRequest;
 import com.example.InvestmentGoalManagementPlatform.DTO.RegisterRequest;
+import com.example.InvestmentGoalManagementPlatform.DTO.ResetPasswordRequest;
 import com.example.InvestmentGoalManagementPlatform.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +57,26 @@ public class AuthController {
             return ResponseEntity.status(401).body("Google sign-in failed");
         } catch (IllegalStateException e) {
             return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        ForgotPasswordResponse response = authService.forgotPassword(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        try {
+            authService.resetPassword(request);
+            return ResponseEntity.ok("Password has been reset successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
