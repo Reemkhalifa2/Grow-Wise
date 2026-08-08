@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -30,6 +31,9 @@ public class User extends BaseEntity {
     private List<FinancialGoal> financialGoals;
     @OneToMany
     private List<Streak> streaks;
+
+    private String resetPasswordToken;
+    private LocalDateTime resetPasswordTokenExpiry;
 
 
 

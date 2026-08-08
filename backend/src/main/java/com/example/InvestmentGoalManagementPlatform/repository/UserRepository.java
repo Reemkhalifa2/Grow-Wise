@@ -13,4 +13,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     boolean existsByEmail(String email);
     long countByIsActiveTrue();
+
+    @Query("SELECT u FROM User u WHERE u.resetPasswordToken = :token AND u.isActive = true")
+    User findByResetPasswordToken(@Param("token") String token);
 }
