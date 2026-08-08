@@ -407,7 +407,7 @@ export class InvestmentPlan implements OnInit {
           this.showToast(
             error?.error?.message ??
             'Failed to save investment plan.',
-            true
+            false
           );
 
           this.cdr.detectChanges();
