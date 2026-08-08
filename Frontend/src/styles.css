@@ -1,1 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* The browser's default 8px body margin was never reset, so every page
+   showed a thin white frame around its content — most visible on pages
+   with a colored/gradient background like login and register. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* app-root is a custom element with no built-in styling, so browsers
+   default it to display:inline — that pushed its block-level page content
+   down by a line-height's worth of space, showing as a white gap at the
+   top of every page. */
+app-root {
+  display: block;
+}
