@@ -1,6 +1,7 @@
 package com.example.InvestmentGoalManagementPlatform.controller;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.AuthResponse;
+import com.example.InvestmentGoalManagementPlatform.DTO.GoogleLoginRequest;
 import com.example.InvestmentGoalManagementPlatform.DTO.LoginRequest;
 import com.example.InvestmentGoalManagementPlatform.DTO.RegisterRequest;
 import com.example.InvestmentGoalManagementPlatform.service.AuthService;
@@ -38,6 +39,21 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body("Invalid email or password");
+        }
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> loginWithGoogle(
+            @Valid @RequestBody GoogleLoginRequest request
+    ) {
+        try {
+            AuthResponse response =
+                    authService.loginWithGoogle(request.getIdToken());
+            return ResponseEntity.ok(response);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(401).body("Google sign-in failed");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         }
     }
 }

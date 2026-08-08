@@ -81,7 +81,24 @@ public class MarketDiscoveryService {
         asset.setName(dto.getName());
         asset.setSymbol(symbol);
         asset.setAssetType(dto.getAssetType());
-        asset.setRiskLevel(riskLevel != null ? riskLevel : RiskLevel.MEDIUM);
+
+        switch (dto.getAssetType()) {
+
+            case GOLD:
+                asset.setRiskLevel(RiskLevel.LOW);
+                break;
+
+            case MUTUAL_FUND:
+                asset.setRiskLevel(RiskLevel.MEDIUM);
+                break;
+
+            case STOCK:
+                asset.setRiskLevel(RiskLevel.HIGH);
+                break;
+
+            default:
+                asset.setRiskLevel(RiskLevel.MEDIUM);
+        }
         asset.setCurrentPrice(dto.getCurrentPrice() != null ? dto.getCurrentPrice() : 0.0);
         asset.setScrapingUrl(dto.getScrapingUrl());
         asset.setCssSelector(dto.getCssSelector());

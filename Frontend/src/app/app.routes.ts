@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { Login } from './page/login/login';
-import { Register } from './page/register/register';
+import { Register } from './page/Register/Register';
 import { UserDashboard } from './page/user-dashboard/user-dashboard';
 import { FinancialProfile } from './page/financial-profile/financial-profile';
 import { AdminDashboard } from './page/dashboard/dashboard';
@@ -49,7 +49,7 @@ export const routes: Routes = [
         component: FinancialGoal
       },
       {
-        path: 'investment-plan/:goalId',
+        path: 'investment-plan',
         component: InvestmentPlan
       },
       {

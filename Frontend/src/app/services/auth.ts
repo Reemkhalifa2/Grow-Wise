@@ -29,6 +29,17 @@ export class Auth {
     );
   }
 
+  /**
+   * Exchanges a Google ID token for one of our own sessions. The account is
+   * created on the backend the first time an address signs in this way.
+   */
+  loginWithGoogle(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
+      `${this.apiUrl}/google`,
+      { idToken }
+    );
+  }
+
   saveSession(response: AuthResponse): void {
     if (response.token) {
       localStorage.setItem('token', response.token);

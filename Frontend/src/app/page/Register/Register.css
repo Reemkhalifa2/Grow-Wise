@@ -99,32 +99,17 @@ body {
   gap: 20px;
 }
 
-/* Google button */
-.btn-google {
-  width: 100%;
+/* Google button — markup is owned by Google Identity Services, so we can only
+   position the container it renders into. */
+.google-button {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border);
-  background: #fff;
-  font-family: var(--font);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+  min-height: 44px;
 }
 
-.btn-google:hover {
-  background: #fafafa;
-  border-color: #d7d9dd;
-}
-
-.btn-google:active {
-  transform: scale(0.99);
+.google-button.disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 .btn-submit {
   display: block;

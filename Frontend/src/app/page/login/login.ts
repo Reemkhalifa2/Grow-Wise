@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject } from '@angular/core';import {
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+  inject
+} from '@angular/core';import {
   FormBuilder,
   ReactiveFormsModule,
   Validators
@@ -8,6 +15,8 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Auth } from '../../services/auth';
+import { GoogleSdkService } from '../../services/google-sdk.service';
+import { AuthResponse } from '../../models/auth.models';
 
 @Component({
   selector: 'app-login',
@@ -20,11 +29,16 @@ import { Auth } from '../../services/auth';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
+export class Login implements AfterViewInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(Auth);
   private readonly router = inject(Router);
 private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly googleSdk = inject(GoogleSdkService);
+
+  @ViewChild('googleButton')
+  private readonly googleButton?: ElementRef<HTMLElement>;
+
   loading = false;
   showPassword = false;
   errorMessage = '';
@@ -45,6 +59,26 @@ private readonly changeDetector = inject(ChangeDetectorRef);
       Validators.required
     ]
   });
+
+  ngAfterViewInit(): void {
+    if (!this.googleButton) {
+      return;
+    }
+
+    this.googleSdk
+      .renderButton(
+        this.googleButton.nativeElement,
+        idToken => this.signInWithGoogle(idToken)
+      )
+      .catch(error => {
+        console.error('Could not load Google sign-in:', error);
+
+        this.errorMessage =
+          'Google sign-in is unavailable right now.';
+
+        this.changeDetector.detectChanges();
+      });
+  }
 
   login(): void {
     this.errorMessage = '';
@@ -70,14 +104,7 @@ private readonly changeDetector = inject(ChangeDetectorRef);
       )
       .subscribe({
         next: response => {
-          this.authService.saveSession(response);
-           const role = response.role?.toUpperCase();
-
-          if (role === 'ADMIN') {
-            this.router.navigate(['/admin-dashboard']);
-          } else {
-            this.router.navigate(['/dashboard']);
-          }
+          this.completeLogin(response);
         },
         error: (error: HttpErrorResponse) => {
           console.error('Login failed:', error);
@@ -101,12 +128,50 @@ private readonly changeDetector = inject(ChangeDetectorRef);
     this.showPassword = !this.showPassword;
   }
 
-  continueWithGoogle(): void {
-    window.open(
-      'http://localhost:8080/oauth2/authorization/google',
-      'google-login',
-      'width=500,height=650'
-    );
+  private signInWithGoogle(idToken: string): void {
+    this.errorMessage = '';
+    this.loading = true;
+
+    this.authService
+      .loginWithGoogle(idToken)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: response => {
+          this.completeLogin(response);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Google login failed:', error);
+
+          if (error.status === 0) {
+            this.errorMessage = 'Cannot connect to the server.';
+          } else if (error.status === 403) {
+            this.errorMessage =
+              'This account is no longer active.';
+          } else {
+            this.errorMessage =
+              'Google sign-in failed. Please try again.';
+          }
+
+          this.showToast(this.errorMessage, true);
+          this.changeDetector.detectChanges();
+        }
+      });
+  }
+
+  private completeLogin(response: AuthResponse): void {
+    this.authService.saveSession(response);
+
+    const role = response.role?.toUpperCase();
+
+    if (role === 'ADMIN') {
+      this.router.navigate(['/admin-dashboard']);
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   isInvalid(controlName: 'email' | 'password'): boolean {

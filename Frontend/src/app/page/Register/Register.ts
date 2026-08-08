@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  ViewChild,
+  inject
+} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -12,6 +18,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { Auth } from '../../services/auth';
+import { GoogleSdkService } from '../../services/google-sdk.service';
 
 @Component({
   selector: 'app-register',
@@ -21,14 +28,18 @@ import { Auth } from '../../services/auth';
     ReactiveFormsModule,
     RouterLink
   ],
-  templateUrl: './register.html',
-  styleUrl: './register.css'
+  templateUrl: './Register.html',
+  styleUrl: './Register.css'
 })
-export class Register {
+export class Register implements AfterViewInit {
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(Auth);
   private readonly router = inject(Router);
+  private readonly googleSdk = inject(GoogleSdkService);
+
+  @ViewChild('googleButton')
+  private readonly googleButton?: ElementRef<HTMLElement>;
 
   loading = false;
   toastMessage = '';
@@ -129,23 +140,73 @@ export class Register {
       });
   }
 
-  continueWithGoogle(): void {
-    const width = 500;
-    const height = 650;
+  ngAfterViewInit(): void {
+    if (!this.googleButton) {
+      return;
+    }
 
-    const left =
-      window.screenX +
-      (window.outerWidth - width) / 2;
+    this.googleSdk
+      .renderButton(
+        this.googleButton.nativeElement,
+        idToken => this.signUpWithGoogle(idToken)
+      )
+      .catch(error => {
+        console.error(
+          'Could not load Google sign-in:',
+          error
+        );
 
-    const top =
-      window.screenY +
-      (window.outerHeight - height) / 2;
+        this.showToast(
+          'Google sign-up is unavailable right now.',
+          true
+        );
+      });
+  }
 
-    window.open(
-      'http://localhost:8080/oauth2/authorization/google',
-      'google-register',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
+  /**
+   * The backend creates the account on first sign-in, so there is nothing left
+   * to confirm — send them straight into the app.
+   */
+  private signUpWithGoogle(idToken: string): void {
+    this.hideToast();
+    this.loading = true;
+
+    this.authService
+      .loginWithGoogle(idToken)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: response => {
+          this.authService.saveSession(response);
+
+          const role = response.role?.toUpperCase();
+
+          this.router.navigate([
+            role === 'ADMIN'
+              ? '/admin-dashboard'
+              : '/dashboard'
+          ]);
+        },
+
+        error: error => {
+          console.error(
+            'Google sign-up failed:',
+            error
+          );
+
+          const message =
+            error.status === 0
+              ? 'Cannot connect to the server.'
+              : error.status === 403
+                ? 'This account is no longer active.'
+                : 'Google sign-up failed. Please try again.';
+
+          this.showToast(message, true);
+        }
+      });
   }
 
   isInvalid(

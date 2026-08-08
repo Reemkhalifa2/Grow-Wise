@@ -6,13 +6,17 @@ import com.example.InvestmentGoalManagementPlatform.DTO.RegisterRequest;
 import com.example.InvestmentGoalManagementPlatform.entity.User;
 import com.example.InvestmentGoalManagementPlatform.repository.UserRepository;
 import com.example.InvestmentGoalManagementPlatform.utility.Role;
+import com.example.InvestmentGoalManagementPlatform.security.GoogleTokenVerifier;
 import com.example.InvestmentGoalManagementPlatform.security.JwtUtil;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()) != null) {
@@ -56,5 +61,43 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         return new AuthResponse( user.getId() ,user.getFullName(), token,user.getEmail(), user.getRole().name());
+    }
+
+    /**
+     * Signs a user in from a Google ID token, creating the account on first use.
+     */
+    public AuthResponse loginWithGoogle(String idToken) {
+        GoogleIdToken.Payload payload = googleTokenVerifier.verify(idToken);
+
+        String email = payload.getEmail();
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            user = createGoogleUser(email, (String) payload.get("name"));
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        return new AuthResponse( user.getId() ,user.getFullName(), token,user.getEmail(), user.getRole().name());
+    }
+
+    private User createGoogleUser(String email, String name) {
+        // findByEmail only matches active rows, so a deactivated account with this
+        // address would otherwise collide with the unique constraint on insert.
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalStateException(
+                    "This account has been deactivated. Please contact support."
+            );
+        }
+
+        User user = new User();
+        user.setFullName(name != null && !name.isBlank() ? name : email);
+        user.setEmail(email);
+
+        // Google users never sign in with a password, but CustomUserDetailsService
+        // rejects a null one — store an unguessable value they can never present.
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        user.setRole(Role.USER);
+
+        return userRepository.save(user);
     }
 }

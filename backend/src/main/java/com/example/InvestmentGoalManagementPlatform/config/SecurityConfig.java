@@ -57,6 +57,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Listing investable assets is something every signed-in user needs
+                        // to build a plan, not an admin-only catalog operation — it just
+                        // happens to live under /api/admin alongside the real admin routes.
+                        .requestMatchers(HttpMethod.GET, "/api/admin/assets/available").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
