@@ -10,11 +10,10 @@ A full-stack web app for setting financial goals and building AI-assisted invest
 - Spring Security with stateless JWT auth (`jjwt`)
 - Google ID token verification for "Sign in with Google"
 - Spring AI (`spring-ai-starter-model-google-genai`) for AI-assisted investment allocation suggestions, backed by the Gemini API
-- springdoc-openapi for Swagger UI
+
 
 **Frontend** — `Frontend/`
 - Angular 21 (standalone components)
-- Chart.js for portfolio/analytics visualizations
 - Angular SSR/Express server support
 
 ## Features
