@@ -9,12 +9,17 @@ import { finalize } from 'rxjs';
 
 import { DashboardStats } from '../../models/dashboard-stats';
 import { Dashboard } from '../../services/dashboard';
+import {
+  AllocationChart,
+  AllocationSlice
+} from '../../shared/allocation-chart/allocation-chart';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    AllocationChart
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
@@ -104,6 +109,38 @@ export class AdminDashboard implements OnInit {
       ) * 100;
 
     return percentage.toFixed(1);
+  }
+
+  get userActivitySlices(): AllocationSlice[] {
+    if (!this.stats) {
+      return [];
+    }
+
+    const inactive = Math.max(
+      this.stats.totalUsers - this.stats.activeUsers,
+      0
+    );
+
+    return [
+      { label: 'Active users', value: this.stats.activeUsers },
+      { label: 'Inactive users', value: inactive }
+    ];
+  }
+
+  get investmentActivitySlices(): AllocationSlice[] {
+    if (!this.stats) {
+      return [];
+    }
+
+    const inactive = Math.max(
+      this.stats.totalInvestments - this.stats.activeInvestments,
+      0
+    );
+
+    return [
+      { label: 'Active investments', value: this.stats.activeInvestments },
+      { label: 'Inactive investments', value: inactive }
+    ];
   }
 
   get currentValueBarWidth(): number {

@@ -23,7 +23,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
-  color: #2563eb;
+  color: #146a4f;
   margin-bottom: .5rem;
 }
 
@@ -59,8 +59,8 @@
   min-width: 42px;
   height: 42px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #e9f4ef;
+  color: #0e4d39;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -119,8 +119,8 @@
 .field input:focus,
 .field select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  border-color: #146a4f;
+  box-shadow: 0 0 0 3px rgba(20, 106, 79,.15);
 }
 
 .error {
@@ -160,7 +160,7 @@
   margin-top: 1rem;
   background: none;
   border: none;
-  color: #2563eb;
+  color: #146a4f;
   cursor: pointer;
   font-weight: 600;
 }
@@ -211,7 +211,7 @@ th {
 
 .badge-type {
   background: #eff6ff;
-  color: #1d4ed8;
+  color: #0e4d39;
 }
 
 .badge-risk-low {
@@ -262,7 +262,7 @@ th {
 }
 
 .icon-btn:hover {
-  background: #dbeafe;
+  background: #e9f4ef;
 }
 
 .icon-btn-danger:hover {
@@ -281,12 +281,12 @@ th {
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: #146a4f;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #0e4d39;
 }
 
 .btn-secondary {
@@ -330,7 +330,7 @@ th {
   position: fixed;
   top: 24px;
   right: 24px;
-  background: #16a34a;
+  background: #146a4f;
   color: white;
   padding: 1rem 1.5rem;
   border-radius: 12px;

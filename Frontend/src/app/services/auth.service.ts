@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -15,9 +16,16 @@ export class AuthService {
   private readonly apiUrl =
     'http://localhost:8080/api/auth';
 
+  private readonly platformId = inject(PLATFORM_ID);
+
   constructor(
     private readonly http: HttpClient
   ) {}
+
+  // localStorage doesn't exist during server-side prerendering/SSR.
+  private get isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(
@@ -27,6 +35,10 @@ export class AuthService {
   }
 
   saveSession(response: AuthResponse): void {
+  if (!this.isBrowser) {
+    return;
+  }
+
   localStorage.setItem('token', response.token);
   localStorage.setItem('role', response.role);
   localStorage.setItem('email', response.email);
@@ -47,11 +59,11 @@ export class AuthService {
 }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return this.isBrowser ? localStorage.getItem('token') : null;
   }
 
   getUserId(): number | null {
-    const userId = localStorage.getItem('id');
+    const userId = this.isBrowser ? localStorage.getItem('id') : null;
 
     return userId
       ? Number(userId)
@@ -59,7 +71,7 @@ export class AuthService {
   }
 
   getRole(): string | null {
-    return localStorage.getItem('role');
+    return this.isBrowser ? localStorage.getItem('role') : null;
   }
 
   isLoggedIn(): boolean {
@@ -71,6 +83,10 @@ export class AuthService {
   }
 
   logout(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
     localStorage.removeItem('token');
     localStorage.removeItem('id');
     localStorage.removeItem('role');

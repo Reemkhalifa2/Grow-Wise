@@ -43,4 +43,12 @@ export class PortfolioService {
       { params }
     );
   }
+
+  deletePlan(
+    planId: number
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/investment-plans/${planId}`
+    );
+  }
 }

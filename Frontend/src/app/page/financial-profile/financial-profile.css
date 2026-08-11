@@ -3,7 +3,7 @@
 }
 
 .financial-profile-page {
-  max-width: 1050px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 36px;
 }
@@ -14,7 +14,7 @@
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #168571;
+  color: #146a4f;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -23,13 +23,20 @@
 
 .page-heading h1 {
   margin: 0;
-  color: #071b36;
+  color: #0f172a;
   font-size: 32px;
 }
 
 .page-description {
   margin: 10px 0 0;
   color: #667085;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
 }
 
 .profile-panel {
@@ -40,10 +47,83 @@
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+/* Live capacity estimate card */
+.capacity-card {
+  padding: 26px;
+  background: linear-gradient(160deg, #146a4f, #0e4d39);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px -6px rgba(20, 106, 79, 0.35);
+  color: #ffffff;
+}
+
+.capacity-card .eyebrow {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.capacity-card h2 {
+  margin: 0 0 18px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.capacity-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.capacity-caption {
+  margin: 4px 0 18px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.capacity-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+
+.capacity-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: width 0.3s ease;
+}
+
+.capacity-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.field-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.group-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.indicators-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .profile-field {
@@ -69,8 +149,8 @@
 }
 
 .input-wrap:focus-within {
-  border-color: #168571;
-  box-shadow: 0 0 0 3px rgba(22, 133, 113, 0.12);
+  border-color: #146a4f;
+  box-shadow: 0 0 0 3px rgba(20, 106, 79, 0.12);
 }
 
 .input-wrap input {
@@ -106,8 +186,8 @@
 }
 
 .plain-input:focus {
-  border-color: #168571;
-  box-shadow: 0 0 0 3px rgba(22, 133, 113, 0.12);
+  border-color: #146a4f;
+  box-shadow: 0 0 0 3px rgba(20, 106, 79, 0.12);
 }
 
 .risk-field {
@@ -130,9 +210,9 @@
 }
 
 .risk-option.active {
-  border-color: #168571;
-  background: #e6f4f1;
-  color: #087f6b;
+  border-color: #146a4f;
+  background: #e9f4ef;
+  color: #146a4f;
   font-weight: 700;
 }
 
@@ -142,11 +222,18 @@
   padding: 14px 20px;
   border: none;
   border-radius: 10px;
-  background: #087f6b;
+  background: #146a4f;
   color: #ffffff;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(20, 106, 79, 0.28);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #0e4d39;
+  transform: translateY(-1px);
 }
 
 .save-button:disabled {
@@ -177,20 +264,14 @@
   color: #b42318;
 }
 
+@media (max-width: 900px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 750px) {
   .financial-profile-page {
     padding: 20px;
-  }
-
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .risk-toggle {
-    flex-direction: column;
-  }
-
-  .risk-option {
-    width: 100%;
   }
 }

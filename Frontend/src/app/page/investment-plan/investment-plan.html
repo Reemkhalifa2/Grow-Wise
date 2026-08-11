@@ -9,14 +9,173 @@
 <main class="plan-page">
 
   <header class="page-header">
-    <h1>Investment Plan</h1>
-    <p>Create a monthly investment plan for your financial goals.</p>
+    <div>
+      <h1>Investment Plans</h1>
+      <p>
+        @if (view === 'list') {
+          Every plan you've built, tied to the goal it funds.
+        } @else {
+          Create a monthly investment plan for one of your financial goals.
+        }
+      </p>
+    </div>
+
+    @if (view === 'list') {
+      <button type="button" class="btn-save btn-inline" (click)="startCreate()">+ New Plan</button>
+    } @else {
+      <button type="button" class="btn-ghost" (click)="cancelCreate()">← Back to plans</button>
+    }
   </header>
 
+  <!-- ============ LIST VIEW ============ -->
+  @if (view === 'list') {
+
+    @if (plansLoading) {
+      <section class="state-card">Loading your investment plans...</section>
+    } @else if (plans.length === 0) {
+      <section class="state-card">
+        You don't have any investment plans yet.
+        <button type="button" class="btn-save btn-inline" (click)="startCreate()">Create your first plan</button>
+      </section>
+    } @else {
+
+      <div class="plans-grid">
+        @for (plan of plans; track plan.planId) {
+          <article class="plan-card">
+
+            <div class="plan-card-top">
+              <div>
+                <span class="plan-goal-name">{{ plan.goalName ?? ('Plan #' + plan.planId) }}</span>
+                <span class="plan-id">Plan #{{ plan.planId }}</span>
+              </div>
+
+              <app-status-badge [label]="plan.status | enumLabel" [variant]="statusVariant(plan.status)"></app-status-badge>
+            </div>
+
+            <div class="plan-progress-row">
+              <app-plan-progress [percentage]="planProgress(plan)" [size]="88" [strokeWidth]="8"></app-plan-progress>
+
+              <div class="plan-progress-amounts">
+                <strong>{{ plan.goalCurrentAmount ?? 0 | currency:'OMR':'code':'1.0-0' }}</strong>
+                <span>of {{ plan.goalTargetAmount ?? 0 | currency:'OMR':'code':'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <div class="plan-metrics-list">
+              <div>
+                <span>Monthly Investment</span>
+                <strong>{{ plan.monthlyInvestmentAmount | currency:'OMR':'code':'1.0-0' }}</strong>
+              </div>
+
+              <div>
+                <span>Portfolio Value</span>
+                <strong>{{ plan.currentValue | currency:'OMR':'code':'1.0-0' }}</strong>
+              </div>
+
+              <div>
+                <span>Return</span>
+                <strong [class.positive-value]="(plan.returnPercentage ?? 0) >= 0" [class.negative-value]="(plan.returnPercentage ?? 0) < 0">
+                  @if (plan.returnPercentage != null) {
+                    {{ plan.returnPercentage >= 0 ? '+' : '' }}{{ plan.returnPercentage | number:'1.1-2' }}%
+                  } @else {
+                    —
+                  }
+                </strong>
+              </div>
+
+              <div>
+                <span>Expected Goal</span>
+                <strong>{{ plan.goalTargetDate ? (plan.goalTargetDate | date:'MMM yyyy') : '—' }}</strong>
+              </div>
+
+              <div>
+                <span>Next Contribution</span>
+                <strong>
+                  {{ plan.monthlyInvestmentCompleted ? plan.nextInvestmentMonth : 'This month' }}
+                </strong>
+              </div>
+            </div>
+
+            @if (plan.monthlyInvestmentCompleted) {
+              <p class="plan-completed-note">✓ This month's contribution is complete</p>
+            }
+
+            <div class="plan-card-actions">
+              <button type="button" class="btn-details" (click)="toggleDetails(plan.planId)">
+                {{ expandedPlanId === plan.planId ? 'Hide Details' : 'View Details' }}
+              </button>
+
+              <button type="button" class="btn-delete-plan" (click)="deletePlan(plan)">Delete</button>
+            </div>
+
+            @if (expandedPlanId === plan.planId) {
+              <div class="plan-details">
+
+                <section class="detail-section">
+                  <h3>Holdings</h3>
+
+                  @if (investmentsForPlan(plan.planId).length === 0) {
+                    <p class="empty-inline">No investments recorded yet.</p>
+                  } @else {
+                    <div class="holdings-table">
+                      <div class="holdings-row holdings-head">
+                        <span>Asset</span>
+                        <span>Invested</span>
+                        <span>Current Value</span>
+                        <span>P/L</span>
+                      </div>
+
+                      @for (investment of investmentsForPlan(plan.planId); track investment.id) {
+                        <div class="holdings-row">
+                          <span class="asset-cell">
+                            <strong>{{ investment.assetName }}</strong>
+                            <small>{{ investment.assetSymbol }}</small>
+                          </span>
+                          <span>{{ investment.amountInvested | currency:'OMR':'code':'1.3-3' }}</span>
+                          <span>{{ investment.currentValue | currency:'OMR':'code':'1.3-3' }}</span>
+                          <span [class.positive-value]="investment.profitOrLoss >= 0" [class.negative-value]="investment.profitOrLoss < 0">
+                            {{ investment.profitOrLoss | currency:'OMR':'code':'1.3-3' }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </section>
+
+                <section class="detail-section">
+                  <h3>Monthly Contributions</h3>
+
+                  @if (investmentsForPlan(plan.planId).length === 0) {
+                    <p class="empty-inline">No contributions recorded yet.</p>
+                  } @else {
+                    <div class="contribution-list">
+                      @for (investment of investmentsForPlan(plan.planId); track investment.id) {
+                        <div class="contribution-row">
+                          <span>{{ investment.purchaseDate | date:'mediumDate' }}</span>
+                          <span>{{ investment.assetSymbol }}</span>
+                          <strong>{{ investment.amountInvested | currency:'OMR':'code':'1.3-3' }}</strong>
+                        </div>
+                      }
+                    </div>
+                  }
+                </section>
+
+              </div>
+            }
+
+          </article>
+        }
+      </div>
+
+    }
+
+  }
+
+  <!-- ============ CREATE VIEW ============ -->
+  @if (view === 'create') {
+
   @if (loading) {
-    <section class="state-card">
-      Loading investment plan...
-    </section>
+    <section class="state-card">Loading investment plan...</section>
   } @else if (goals.length === 0) {
     <section class="state-card error-state">
       No financial goals found. Create a goal first.
@@ -65,8 +224,6 @@
             </strong>
           </article>
 
-     
-
           <article>
             <span>Target date</span>
             <strong>{{ goal.targetDate }}</strong>
@@ -109,8 +266,8 @@
 
         <div>
           <span>Plan Type</span>
-          <strong>
-            {{ planType === 'AI_SUGGESTED' ? 'AI Suggested' : 'Manual' }}
+          <strong [class.ai-tag]="planType === 'AI_SUGGESTED'">
+            {{ planType === 'AI_SUGGESTED' ? '✦ AI Suggested' : 'Manual' }}
           </strong>
         </div>
 
@@ -141,8 +298,8 @@
               </div>
 
               <div class="asset-tags">
-                <span class="tag">{{ allocation.assetType }}</span>
-                <span class="tag">{{ allocation.riskLevel }} risk</span>
+                <span class="tag">{{ allocation.assetType | enumLabel }}</span>
+                <span class="tag">{{ allocation.riskLevel | enumLabel }} risk</span>
               </div>
 
               <div class="asset-price-row">
@@ -255,6 +412,8 @@
         {{ saving ? 'Saving investment plan...' : 'Save Investment Plan' }}
       </button>
     </section>
+
+  }
 
   }
 

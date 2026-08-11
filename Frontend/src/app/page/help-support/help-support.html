@@ -1,0 +1,23 @@
+<main class="page">
+
+  <app-page-header
+    eyebrow="Support"
+    title="Help & Support"
+    subtitle="Answers to common questions about GlowWise."
+  ></app-page-header>
+
+  <section class="faq-list">
+    @for (faq of faqs; track faq.question) {
+      <article class="faq-card">
+        <h3>{{ faq.question }}</h3>
+        <p>{{ faq.answer }}</p>
+      </article>
+    }
+  </section>
+
+  <section class="contact-card">
+    <h3>Still need help?</h3>
+    <p>Reach out to your platform administrator for account-specific issues.</p>
+  </section>
+
+</main>

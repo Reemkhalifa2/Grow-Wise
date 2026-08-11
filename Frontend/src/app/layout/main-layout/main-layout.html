@@ -14,101 +14,144 @@
       </div>
 
       <div>
-        <div class="brand-name">GlowWise</div>
+        <div class="brand-name">Grow Wise</div>
         <div class="brand-tagline">Invest with direction</div>
       </div>
     </div>
 
     <nav class="nav-group">
-      <a
-        routerLink="/dashboard"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-item"
-      >
-        <span class="nav-icon">▦</span>
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.7" />
+            <rect x="14" y="3" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.7" />
+            <rect x="3" y="14" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.7" />
+            <rect x="14" y="14" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.7" />
+          </svg>
+        </span>
         <span>Overview</span>
       </a>
 
-      <a
-        routerLink="/financial-profile"
-        routerLinkActive="active"
-        class="nav-item"
-      >
-        <span class="nav-icon">◯</span>
-        <span>Financial profile</span>
-      </a>
-
-      <a
-        routerLink="/financial-goal"
-        routerLinkActive="active"
-        class="nav-item"
-      >
-        <span class="nav-icon">◎</span>
-        <span>Investment goal</span>
-      </a>
-
-      <a
-        routerLink="/investment-plan"
-        routerLinkActive="active"
-        class="nav-item"
-      >
-        <span class="nav-icon">✦</span>
-        <span>Investment plan</span>
-      </a>
-
-      <a
-        routerLink="/to-do"
-        routerLinkActive="active"
-        class="nav-item"
-      >
-        <span class="nav-icon">✦</span>
-        <span>To do</span>
-      </a>
-      
-    
-      <a
-        routerLink="/portfolio"
-        routerLinkActive="active"
-        class="nav-item"
-      >
-        <span class="nav-icon">▣</span>
+      <a routerLink="/portfolio" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.7" />
+            <path d="M8 7V5.5A1.5 1.5 0 019.5 4h5A1.5 1.5 0 0116 5.5V7" stroke="currentColor" stroke-width="1.7" />
+          </svg>
+        </span>
         <span>Portfolio</span>
+      </a>
+
+      <a routerLink="/financial-goal" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7" />
+            <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.7" />
+            <circle cx="12" cy="12" r="1" fill="currentColor" />
+          </svg>
+        </span>
+        <span>Goals</span>
+      </a>
+
+      <a routerLink="/investment-plan" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3l1.9 4.7L18.5 9l-4.6 1.8L12 15.5l-1.9-4.7L5.5 9l4.6-1.3L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span>Investment Plans</span>
+      </a>
+
+      <a routerLink="/to-do" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7" />
+            <path d="M8 12.2l2.4 2.4L16 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span>To Do</span>
+      </a>
+    </nav>
+
+    <div class="nav-section-label">Finances</div>
+    <nav class="nav-group">
+      <a routerLink="/financial-profile" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7" />
+            <path d="M5 20c0-4 3.1-7 7-7s7 3 7 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span>Financial Profile</span>
+      </a>
+    </nav>
+
+    <div class="nav-section-label">Market</div>
+    <nav class="nav-group">
+      <a routerLink="/market" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <path d="M4 19V10M11 19V4M18 19V13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span>Market Overview</span>
       </a>
     </nav>
 
     @if (isAdmin) {
-      <div class="nav-section-label">
-        Administration
-      </div>
+      <div class="nav-section-label">Administration</div>
 
       <nav class="nav-group">
-        <a
-          routerLink="/admin-dashboard"
-          routerLinkActive="active"
-          class="nav-item"
-        >
-          <span class="nav-icon">◇</span>
-          <span>Admin overview</span>
+        <a routerLink="/admin-dashboard" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12l9-8 9 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M5.5 10.5V20a1 1 0 001 1H10v-5.5h4V21h3.5a1 1 0 001-1v-9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span>Admin Overview</span>
         </a>
 
-        <a
-          routerLink="/assets"
-          routerLinkActive="active"
-          class="nav-item"
-        >
-          <span class="nav-icon">▤</span>
+        <a routerLink="/assets" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19V10M11 19V4M18 19V13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+          </span>
           <span>Assets</span>
         </a>
       </nav>
     }
 
-    <button
-      type="button"
-      class="logout-button"
-      (click)="logout()"
-    >
-      <span>↪</span>
+    <div class="nav-section-label">Settings</div>
+    <nav class="nav-group">
+      <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span>Settings</span>
+      </a>
+
+      <a routerLink="/help" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />
+            <path d="M9.5 9.2a2.5 2.5 0 114 2c-.7.5-1.5 1-1.5 2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <circle cx="12" cy="17" r="0.9" fill="currentColor" />
+          </svg>
+        </span>
+        <span>Help & Support</span>
+      </a>
+    </nav>
+
+    <button type="button" class="logout-button" (click)="logout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
       Log out
     </button>
   </aside>
@@ -116,20 +159,76 @@
   <section class="workspace">
 
     <header class="topbar">
-      <div>
-        <div class="page-label">Investment platform</div>
-        <div class="topbar-date">{{ currentDate }}</div>
+      <div class="topbar-greeting">
+        <h2>{{ greeting }} 👋</h2>
+        <p>Here is your wealth overview for today · {{ currentDate }}</p>
       </div>
 
-      <div class="topbar-user">
-        <div class="user-info">
-          <div class="user-name">{{ fullName }}</div>
-          <div class="user-role">{{ role }}</div>
+      <div class="topbar-actions">
+
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8" />
+            <path d="M20 20l-3.2-3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+
+          <input
+            type="text"
+            placeholder="Search GrowWise..."
+            [(ngModel)]="searchQuery"
+            (focus)="searchOpen = true"
+          />
+
+          @if (searchOpen && searchResults.length > 0) {
+            <div class="search-results">
+              @for (result of searchResults; track result.path) {
+                <button type="button" (click)="goTo(result)">{{ result.label }}</button>
+              }
+            </div>
+          }
         </div>
 
-        <div class="user-avatar">
-          {{ initials }}
+        <div class="notification-wrap">
+          <button type="button" class="icon-button" (click)="toggleNotifications()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 8a6 6 0 1112 0c0 4 1.5 5.5 1.5 6.5H4.5C4.5 13.5 6 12 6 8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M9.5 17.5a2.5 2.5 0 005 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+
+            @if (pendingTasks.length > 0) {
+              <span class="notification-dot">{{ pendingTasks.length }}</span>
+            }
+          </button>
+
+          @if (notificationsOpen) {
+            <div class="notification-panel">
+              <div class="notification-panel-title">Pending action items</div>
+
+              @if (pendingTasks.length === 0) {
+                <p class="notification-empty">You're all caught up.</p>
+              } @else {
+                @for (task of pendingTasks; track task.id) {
+                  <a routerLink="/to-do" class="notification-row">
+                    <span>{{ task.title }}</span>
+                    @if (task.dueDate) {
+                      <small>{{ task.dueDate | date:'mediumDate' }}</small>
+                    }
+                  </a>
+                }
+              }
+            </div>
+          }
         </div>
+
+        <div class="topbar-user">
+          <div class="user-info">
+            <div class="user-name">{{ fullName }}</div>
+            <div class="user-role">{{ role }}</div>
+          </div>
+
+          <div class="user-avatar">{{ initials }}</div>
+        </div>
+
       </div>
     </header>
 

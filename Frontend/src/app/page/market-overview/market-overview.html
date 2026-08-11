@@ -1,0 +1,82 @@
+<main class="page">
+
+  <app-page-header
+    eyebrow="Market"
+    title="Market Overview"
+    subtitle="Live prices for the assets available on GlowWise."
+  >
+    <button
+      actions
+      type="button"
+      class="btn-refresh"
+      [disabled]="loading"
+      (click)="load()"
+    >
+      {{ loading ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </app-page-header>
+
+  @if (loading) {
+    <section class="state-card">Loading market data...</section>
+  } @else if (errorMessage) {
+    <section class="state-card error-state">{{ errorMessage }}</section>
+  } @else if (assets.length === 0) {
+    <section class="state-card">No market data is available right now.</section>
+  } @else {
+    <section class="market-grid">
+      @for (asset of assets; track trackBySymbol($index, asset)) {
+        <article class="market-card">
+          <div class="market-card-top">
+            <div>
+              <strong>{{ asset.name }}</strong>
+              <span class="symbol">{{ asset.symbol }}</span>
+            </div>
+            <span class="type-tag">{{ asset.assetType }}</span>
+          </div>
+
+          <div class="price-row">
+            @if (asset.currentPrice > 0) {
+              <span class="price">{{ asset.currentPrice | currency:'OMR':'code':'1.3-3' }}</span>
+            } @else {
+              <span class="price-unavailable">Price not available</span>
+            }
+          </div>
+
+          @if (asset.oneYearReturn != null || asset.threeYearReturn != null || asset.fiveYearReturn != null) {
+            <div class="return-row">
+              @if (asset.oneYearReturn != null) {
+                <div>
+                  <span>1Y</span>
+                  <strong [class.positive-value]="asset.oneYearReturn >= 0" [class.negative-value]="asset.oneYearReturn < 0">
+                    {{ asset.oneYearReturn >= 0 ? '+' : '' }}{{ asset.oneYearReturn | number:'1.1-2' }}%
+                  </strong>
+                </div>
+              }
+              @if (asset.threeYearReturn != null) {
+                <div>
+                  <span>3Y</span>
+                  <strong [class.positive-value]="asset.threeYearReturn >= 0" [class.negative-value]="asset.threeYearReturn < 0">
+                    {{ asset.threeYearReturn >= 0 ? '+' : '' }}{{ asset.threeYearReturn | number:'1.1-2' }}%
+                  </strong>
+                </div>
+              }
+              @if (asset.fiveYearReturn != null) {
+                <div>
+                  <span>5Y</span>
+                  <strong [class.positive-value]="asset.fiveYearReturn >= 0" [class.negative-value]="asset.fiveYearReturn < 0">
+                    {{ asset.fiveYearReturn >= 0 ? '+' : '' }}{{ asset.fiveYearReturn | number:'1.1-2' }}%
+                  </strong>
+                </div>
+              }
+            </div>
+          }
+
+          @if (asset.source) {
+            <div class="source-row">Source: {{ asset.source }}</div>
+          }
+        </article>
+      }
+    </section>
+  }
+
+</main>

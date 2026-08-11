@@ -1,0 +1,26 @@
+<div class="allocation-chart">
+  <div class="canvas-wrap">
+    <canvas #canvas></canvas>
+
+    @if (centerValue) {
+      <div class="chart-center">
+        <strong>{{ centerValue }}</strong>
+        <span>{{ centerLabel }}</span>
+      </div>
+    }
+  </div>
+
+  <ul class="legend">
+    @for (slice of slices; track slice.label; let i = $index) {
+      <li>
+        <span
+          class="swatch"
+          [style.background]="[
+            '#146a4f','#6366f1','#d4a017','#0ea5e9','#dc2626','#0e4d39','#8b5cf6','#64748b'
+          ][i % 8]"
+        ></span>
+        <span class="legend-label">{{ slice.label }}</span>
+      </li>
+    }
+  </ul>
+</div>

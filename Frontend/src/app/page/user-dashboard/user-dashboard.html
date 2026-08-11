@@ -1,166 +1,216 @@
 <section class="dashboard">
 
   @if (loading) {
-    <div class="state-card">
-      Loading dashboard...
-    </div>
+    <div class="state-card">Loading dashboard...</div>
   } @else if (errorMessage) {
     <div class="state-card error-state">
       <p>{{ errorMessage }}</p>
-
-      <button
-        type="button"
-        (click)="retry()"
-      >
-        Try again
-      </button>
+      <button type="button" (click)="retry()">Try again</button>
     </div>
   } @else {
 
-    <header class="dashboard-header">
-      <div class="eyebrow">
-        Your wealth plan
-      </div>
+    <!-- Portfolio hero + allocation -->
+    <div class="hero-grid">
 
-      <h1>
-        {{ greeting }}
-      </h1>
+      <article class="hero-card">
+        <div class="hero-top">
+          <div>
+            <span class="hero-label">Portfolio Value</span>
+            <div class="hero-value">{{ totalCurrentValue | currency:'OMR':'code':'1.3-3' }}</div>
 
-      <p>
-        Here is your current financial overview.
-      </p>
-    </header>
-
-    <div class="stats-grid">
-
-      <article class="stat-card">
-        <div class="stat-label">
-          Total invested
+            <div class="hero-delta" [class.positive-value]="isProfit" [class.negative-value]="!isProfit">
+              {{ isProfit ? '▲' : '▼' }}
+              {{ totalProfitLoss | currency:'OMR':'code':'1.3-3' }}
+              ({{ totalReturnPercentage >= 0 ? '+' : '' }}{{ totalReturnPercentage | number:'1.1-2' }}%)
+            </div>
+          </div>
         </div>
 
-        <div class="stat-value">
-          {{ metrics.totalInvestment | number:'1.2-2' }} OMR
-        </div>
-
-        <div class="stat-description">
-          Total contributions made
+        <div class="hero-chart">
+          <app-portfolio-chart [points]="contributionPoints"></app-portfolio-chart>
         </div>
       </article>
 
-      <article class="stat-card">
-        <div class="stat-label">
-          Total plans
-        </div>
+      <article class="allocation-card">
+        <span class="hero-label">Asset Allocation</span>
 
-        <div class="stat-value">
-          {{ metrics.totalPlans }}
-        </div>
-
-        <div class="stat-description">
-          Active investment plans
-        </div>
-      </article>
-
-      <article class="stat-card">
-        <div class="stat-label">
-          Total goals
-        </div>
-
-        <div class="stat-value">
-          {{ metrics.totalGoals }}
-        </div>
-
-        <div class="stat-description">
-          Financial goals tracked
-        </div>
-      </article>
-
-      <article class="stat-card">
-        <div class="stat-label">
-          Monthly capacity
-        </div>
-
-        <div class="stat-value">
-          {{ summary.netMonthlySavings | number:'1.2-2' }} OMR
-        </div>
-
-        <div class="stat-description">
-          Available each month
-        </div>
+        @if (allocationSlices.length === 0) {
+          <div class="empty-inline">No holdings yet.</div>
+        } @else {
+          <app-allocation-chart
+            [slices]="allocationSlices"
+            [centerValue]="(totalCurrentValue | currency:'OMR':'code':'1.0-0')!"
+            centerLabel="total"
+          ></app-allocation-chart>
+        }
       </article>
 
     </div>
 
-    @if (profile) {
-      <section class="profile-card">
-        <h2>Financial profile & overview</h2>
+    <!-- KPI row -->
+    <div class="kpi-grid">
+      <app-stat-card label="Total Invested" [value]="(totalInvested | currency:'OMR':'code':'1.3-3')!">
+        <svg icon width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19V10M11 19V4M18 19V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+      </app-stat-card>
 
-        <div class="profile-grid">
-          <div>
-            <span>Name</span>
-            <strong>
-              {{ profile.fullName }}
-            </strong>
-          </div>
+      <app-stat-card
+        label="Total Profit / Loss"
+        [value]="(totalProfitLoss | currency:'OMR':'code':'1.3-3')!"
+        [footnoteTone]="isProfit"
+        [footnote]="isProfit ? 'Gain' : 'Loss'"
+      >
+        <svg icon width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12h3.5l2-6 4 12 2-9 1.5 3H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </app-stat-card>
 
-          <div>
-            <span>Email</span>
-            <strong>
-              {{ profile.email }}
-            </strong>
-          </div>
+      <app-stat-card
+        label="Return"
+        [value]="(totalReturnPercentage >= 0 ? '+' : '') + (totalReturnPercentage | number:'1.1-2') + '%'"
+        [footnoteTone]="isProfit"
+      >
+        <svg icon width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5-8 4.5-8-4.5L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+      </app-stat-card>
 
-          <div>
-            <span>Monthly salary</span>
-            <strong>
-              {{ profile.monthlySalary | number:'1.2-2' }} OMR
-            </strong>
-          </div>
+      <app-stat-card label="Monthly Capacity" [value]="monthlyCapacityLabel">
+        <svg icon width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 13c0-3.5 3-6.5 8-6.5s8 3 8 6.5-3 5-8 5-8-1.5-8-5z" stroke="currentColor" stroke-width="1.8" /></svg>
+      </app-stat-card>
 
-          <div>
-            <span>Monthly expenses</span>
-            <strong>
-              {{ profile.monthlyExpenses | number:'1.2-2' }} OMR
-            </strong>
-          </div>
+      <app-stat-card label="Savings Rate" [value]="savingsRateLabel">
+        <svg icon width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.8" /><path d="M8.5 12.5l2 2 4-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </app-stat-card>
+    </div>
 
-          <div>
-            <span>Saving capacity</span>
-            <strong>
-              {{ summary.netMonthlySavings | number:'1.2-2' }} OMR
-            </strong>
-          </div>
+    <!-- Goals + Plans -->
+    <div class="split-grid">
 
-          <div>
-            <span>Role</span>
-            <strong>
-              {{ profile.role }}
-            </strong>
-          </div>
-
-          <div>
-            <span>Total investment</span>
-            <strong>
-              {{ metrics.totalInvestment | number:'1.2-2' }} OMR
-            </strong>
-          </div>
-
-          <div>
-            <span>Active plans</span>
-            <strong>
-              {{ metrics.totalPlans }}
-            </strong>
-          </div>
-
-          <div>
-            <span>Target goals</span>
-            <strong>
-              {{ metrics.totalGoals }}
-            </strong>
-          </div>
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Your Goals</h2>
+          <a routerLink="/financial-goal">View all</a>
         </div>
-      </section>
-    }
+
+        @if (topGoals.length === 0) {
+          <p class="empty-inline">No goals yet. <a routerLink="/financial-goal">Create your first goal.</a></p>
+        } @else {
+          <div class="goal-list">
+            @for (item of topGoals; track item.goal.id) {
+              <div class="goal-row">
+                <app-goal-icon [icon]="goalIcon(item.goal)"></app-goal-icon>
+
+                <div class="goal-row-body">
+                  <div class="goal-row-top">
+                    <strong>{{ item.goal.goalName }}</strong>
+                    @if (item.status) {
+                      <app-status-badge [label]="item.status.label" [variant]="statusVariant(item.status.status)"></app-status-badge>
+                    }
+                  </div>
+
+                  <div class="goal-row-amounts">
+                    {{ item.goal.currentAmount | currency:'OMR':'code':'1.0-0' }} / {{ item.goal.targetAmount | currency:'OMR':'code':'1.0-0' }}
+                  </div>
+
+                  <app-goal-progress [percentage]="item.progress"></app-goal-progress>
+
+                  <div class="goal-row-footer">
+                    <span>{{ item.progress | number:'1.0-0' }}%</span>
+                    @if (item.goal.targetDate) {
+                      <span>Expected {{ item.goal.targetDate | date:'MMM yyyy' }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Investment Plans</h2>
+          <a routerLink="/investment-plan">View all</a>
+        </div>
+
+        @if (topPlans.length === 0) {
+          <p class="empty-inline">No investment plans yet. <a routerLink="/investment-plan">Create a plan.</a></p>
+        } @else {
+          <div class="plan-list">
+            @for (plan of topPlans; track plan.planId) {
+              <div class="plan-row">
+                <app-plan-progress [percentage]="planProgress(plan)" [size]="56" [strokeWidth]="6"></app-plan-progress>
+
+                <div class="plan-row-body">
+                  <strong>{{ plan.goalName ?? ('Plan #' + plan.planId) }}</strong>
+                  <span>Plan #{{ plan.planId }}</span>
+                </div>
+
+                <app-status-badge label="ACTIVE" variant="info"></app-status-badge>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+    </div>
+
+    <!-- AI insight + market -->
+    <div class="split-grid">
+
+      <article class="panel ai-card">
+        <div class="panel-head">
+          <h2>✦ AI Insight</h2>
+        </div>
+
+        @if (topGoals.length === 0) {
+          <p class="ai-text">
+            Create a financial goal and an investment plan to unlock personalized AI allocation suggestions.
+          </p>
+        } @else {
+          <p class="ai-text">
+            AI-assisted allocation is available when building an investment plan for any of your goals.
+          </p>
+
+          <a routerLink="/investment-plan" class="ai-link">See recommendation →</a>
+        }
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Market Update</h2>
+          <a routerLink="/market">View all</a>
+        </div>
+
+        @if (marketLoading) {
+          <p class="empty-inline">Loading market data...</p>
+        } @else if (marketAssets.length === 0) {
+          <p class="empty-inline">Market data is unavailable right now.</p>
+        } @else {
+          <div class="market-list">
+            @for (asset of marketAssets; track asset.symbol) {
+              <div class="market-row">
+                <div>
+                  <strong>{{ asset.name }}</strong>
+                  <span>{{ asset.symbol }}</span>
+                </div>
+
+                <div class="market-row-right">
+                  @if (asset.currentPrice > 0) {
+                    <strong>{{ asset.currentPrice | number:'1.3-3' }}</strong>
+                  } @else {
+                    <strong class="empty-inline">N/A</strong>
+                  }
+
+                  @if (asset.oneYearReturn != null) {
+                    <span [class.positive-value]="asset.oneYearReturn >= 0" [class.negative-value]="asset.oneYearReturn < 0">
+                      {{ asset.oneYearReturn >= 0 ? '+' : '' }}{{ asset.oneYearReturn | number:'1.1-2' }}%
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+    </div>
 
   }
 

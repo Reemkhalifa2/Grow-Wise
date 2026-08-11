@@ -23,6 +23,7 @@ export class TaskComponent implements OnInit {
 
   tasks: TaskResponse[] = [];
   loading = true;
+  searchQuery = '';
 
   showModal = false;
   editingId: number | null = null;
@@ -85,6 +86,31 @@ export class TaskComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTasks();
+  }
+
+  get filteredTasks(): TaskResponse[] {
+    const query = this.searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return this.tasks;
+    }
+
+    return this.tasks.filter(task =>
+      task.title?.toLowerCase().includes(query) ||
+      task.description?.toLowerCase().includes(query)
+    );
+  }
+
+  get pendingCount(): number {
+    return this.tasks.filter(task => !task.completed).length;
+  }
+
+  isOverdue(task: TaskResponse): boolean {
+    if (!task.dueDate || task.completed) {
+      return false;
+    }
+
+    return new Date(task.dueDate) < new Date(new Date().toDateString());
   }
 
   loadTasks(): void {

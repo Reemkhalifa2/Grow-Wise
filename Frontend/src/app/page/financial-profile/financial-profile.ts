@@ -15,13 +15,15 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { FinancialProfileService } from '../../services/financial-profile.service';
 import { FinancialProfileRequest } from '../../models/financial-profile.models';
+import { StatCard } from '../../shared/stat-card/stat-card';
 
 @Component({
   selector: 'app-financial-profile',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    StatCard
   ],
   templateUrl: './financial-profile.html',
   styleUrl: './financial-profile.css'
@@ -152,5 +154,39 @@ export class FinancialProfile implements OnInit {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  get monthlySalary(): number {
+    return Number(this.profileForm.value.monthlySalary) || 0;
+  }
+
+  get monthlyExpenses(): number {
+    return Number(this.profileForm.value.monthlyExpenses) || 0;
+  }
+
+  get availableCapacity(): number {
+    return Math.max(this.monthlySalary - this.monthlyExpenses, 0);
+  }
+
+  get savingsRatePercent(): number {
+    if (this.monthlySalary <= 0) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.min((this.availableCapacity / this.monthlySalary) * 100, 100)
+    );
+  }
+
+  get expenseRatioPercent(): number {
+    if (this.monthlySalary <= 0) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.min((this.monthlyExpenses / this.monthlySalary) * 100, 100)
+    );
   }
 }

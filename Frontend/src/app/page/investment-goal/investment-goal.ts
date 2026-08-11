@@ -11,23 +11,32 @@ import {
   Validators
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 
 import { AuthService } from '../../services/auth.service';
 import {
   investmentGoalService
 } from '../../services/investmentGoal-service';
+import { InvestmentPlanService } from '../../services/investment-plan.service';
 import {
   InvestmentGoalRequest,
-  InvestmentGoalResponse
+  InvestmentGoalResponse,
+  GoalRiskLevel
 } from '../../models/investmentGoal-models';
+import { InvestmentPlanOverview } from '../../models/portfolio-models';
+
+import { GoalIcon } from '../../shared/goal-icon/goal-icon';
+import { StatusBadge, StatusVariant } from '../../shared/status-badge/status-badge';
+import { computeGoalStatus, goalIconKey } from '../../shared/goal-status';
 
 @Component({
   selector: 'app-investment-goal',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    GoalIcon,
+    StatusBadge
   ],
   templateUrl: './investment-goal.html',
   styleUrl: './investment-goal.css'
@@ -43,6 +52,9 @@ export class FinancialGoal implements OnInit {
   private readonly financialGoalService =
     inject(investmentGoalService);
 
+  private readonly investmentPlanService =
+    inject(InvestmentPlanService);
+
   private readonly router =
     inject(Router);
 
@@ -51,8 +63,12 @@ export class FinancialGoal implements OnInit {
 
   saving = false;
   loadingGoals = false;
+  deletingGoalId: number | null = null;
 
   savedGoals: InvestmentGoalResponse[] = [];
+  private plans: InvestmentPlanOverview[] = [];
+
+  readonly riskLevels: GoalRiskLevel[] = ['LOW', 'MEDIUM', 'HIGH'];
 
   toastMessage = '';
   toastIsError = false;
@@ -103,6 +119,13 @@ export class FinancialGoal implements OnInit {
         Validators.required,
         Validators.min(0)
       ]
+    ],
+
+    riskLevel: [
+      'MEDIUM' as GoalRiskLevel,
+      [
+        Validators.required
+      ]
     ]
   });
 
@@ -130,8 +153,10 @@ export class FinancialGoal implements OnInit {
 
     this.loadingGoals = true;
 
-    this.financialGoalService
-      .getByUserId(userId)
+    forkJoin({
+      goals: this.financialGoalService.getByUserId(userId),
+      plans: this.investmentPlanService.getPlanOverviewsByUserId(userId)
+    })
       .pipe(
         finalize(() => {
           this.loadingGoals = false;
@@ -139,13 +164,9 @@ export class FinancialGoal implements OnInit {
         })
       )
       .subscribe({
-        next: goals => {
-          console.log(
-            'Loaded goals:',
-            goals
-          );
-
-          this.savedGoals = goals;
+        next: result => {
+          this.savedGoals = result.goals ?? [];
+          this.plans = result.plans ?? [];
           this.cdr.detectChanges(); // 3. Render loaded goals array immediately
         },
 
@@ -168,6 +189,32 @@ export class FinancialGoal implements OnInit {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  goalIcon(goal: InvestmentGoalResponse) {
+    return goalIconKey(goal.goalName);
+  }
+
+  goalStatus(goal: InvestmentGoalResponse) {
+    const linkedPlan = this.plans.find(plan => plan.goalId === goal.id);
+
+    return computeGoalStatus(
+      goal.targetAmount,
+      goal.currentAmount,
+      goal.targetDate,
+      linkedPlan?.monthlyInvestmentAmount ?? null
+    );
+  }
+
+  statusVariant(status: string): StatusVariant {
+    if (status === 'ON_TRACK') return 'success';
+    if (status === 'NEEDS_ATTENTION') return 'warning';
+    if (status === 'BEHIND') return 'danger';
+    return 'neutral';
+  }
+
+  setRiskLevel(riskLevel: GoalRiskLevel): void {
+    this.goalForm.patchValue({ riskLevel });
   }
 
   createInvestmentPlan(
@@ -513,7 +560,7 @@ export class FinancialGoal implements OnInit {
           ? 'ACHIEVED'
           : 'ACTIVE',
       riskLevel:
-        'MEDIUM',
+        (this.goalForm.value.riskLevel as GoalRiskLevel) ?? 'MEDIUM',
       userId
     };
 
@@ -550,7 +597,8 @@ export class FinancialGoal implements OnInit {
             monthlyExpenses: '',
             currentSavings: '',
             targetAmount: '',
-            monthlyContribution: ''
+            monthlyContribution: '',
+            riskLevel: 'MEDIUM'
           });
 
           this.cdr.detectChanges(); // 5. Refresh form fields visually
@@ -567,6 +615,63 @@ export class FinancialGoal implements OnInit {
             error.error?.message ??
             error.error?.error ??
             'Failed to save goal. Please try again.';
+
+          this.showToast(
+            message,
+            true
+          );
+
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  deleteGoal(
+    goal: InvestmentGoalResponse
+  ): void {
+    const confirmed = window.confirm(
+      `Delete goal "${goal.goalName}"? This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingGoalId = goal.id;
+
+    this.financialGoalService
+      .delete(goal.id)
+      .pipe(
+        finalize(() => {
+          this.deletingGoalId = null;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.savedGoals = this.savedGoals.filter(
+            existingGoal =>
+              existingGoal.id !== goal.id
+          );
+
+          this.showToast(
+            'Goal deleted.',
+            false
+          );
+
+          this.cdr.detectChanges();
+        },
+
+        error: error => {
+          console.error(
+            'Failed to delete goal:',
+            error
+          );
+
+          const message =
+            error.error?.message ??
+            error.error?.error ??
+            'Failed to delete goal.';
 
           this.showToast(
             message,
