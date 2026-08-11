@@ -12,6 +12,7 @@ import {
   InvestmentPlanRequest,
   InvestmentPlanResponse
 } from '../models/investment-plan-models';
+import { InvestmentPlanOverview } from '../models/portfolio-models';
 
 @Injectable({
   providedIn: 'root'
@@ -64,6 +65,22 @@ export class InvestmentPlanService {
     return this.http.post<InvestmentPlanResponse>(
       `${this.apiUrl}/investment-plans`,
       request
+    );
+  }
+
+  deletePlan(
+    planId: number
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/investment-plans/${planId}`
+    );
+  }
+
+  getPlanOverviewsByUserId(
+    userId: number
+  ): Observable<InvestmentPlanOverview[]> {
+    return this.http.get<InvestmentPlanOverview[]>(
+      `${this.apiUrl}/investment-plans/user/${userId}`
     );
   }
 }

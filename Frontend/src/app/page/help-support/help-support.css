@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.faq-card {
+  background: #ffffff;
+  border: 1px solid #e3e9f4;
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 2px rgba(7, 26, 64, 0.04);
+}
+
+.faq-card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b1526;
+}
+
+.faq-card p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.contact-card {
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #146a4f, #0e4d39);
+  color: #ffffff;
+}
+
+.contact-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.contact-card p {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.85);
+}

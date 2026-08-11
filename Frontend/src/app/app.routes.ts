@@ -14,6 +14,9 @@ import { authGuard } from './authGuard'; // <-- Add this
 import {TaskComponent} from './page/task/task.component';
 import {InvestmentPlan} from './page/investment-plan/investment-plan';
 import {Portfolio} from './page/portfolio/portfolio';
+import {MarketOverview} from './page/market-overview/market-overview';
+import {Settings} from './page/settings/settings';
+import {HelpSupport} from './page/help-support/help-support';
 
 export const routes: Routes = [
   {
@@ -69,6 +72,18 @@ export const routes: Routes = [
       {
         path: 'portfolio',
         component: Portfolio
+      },
+      {
+        path: 'market',
+        component: MarketOverview
+      },
+      {
+        path: 'settings',
+        component: Settings
+      },
+      {
+        path: 'help',
+        component: HelpSupport
       },
       {
         path: '',

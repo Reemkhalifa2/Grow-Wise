@@ -18,6 +18,7 @@ import {
 import {
   investmentGoalService
 } from '../../services/investmentGoal-service';
+import { PortfolioService } from '../../services/portfolio-service';
 
 import {
   AssetAllocationView,
@@ -27,13 +28,26 @@ import {
 import {
   InvestmentGoalResponse
 } from '../../models/investmentGoal-models';
+import {
+  InvestmentPlanOverview,
+  InvestmentResponse
+} from '../../models/portfolio-models';
+
+import { PlanProgress } from '../../shared/plan-progress/plan-progress';
+import { StatusBadge, StatusVariant } from '../../shared/status-badge/status-badge';
+import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
+
+type PageView = 'list' | 'create';
 
 @Component({
   selector: 'app-investment-plan',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    PlanProgress,
+    StatusBadge,
+    EnumLabelPipe
   ],
   templateUrl: './investment-plan.html',
   styleUrl: './investment-plan.css'
@@ -49,12 +63,22 @@ export class InvestmentPlan implements OnInit {
   private readonly investmentGoalService =
     inject(investmentGoalService);
 
+  private readonly portfolioService =
+    inject(PortfolioService);
+
   private readonly cdr =
-    inject(ChangeDetectorRef); // 1. Inject ChangeDetectorRef
+    inject(ChangeDetectorRef);
 
   userId = 0;
+  view: PageView = 'list';
 
-  // -- Goal selection --
+  // -- Plans list --
+  plans: InvestmentPlanOverview[] = [];
+  plansLoading = false;
+  expandedPlanId: number | null = null;
+  private investmentsByPlan = new Map<number, InvestmentResponse[]>();
+
+  // -- Goal selection (create form) --
   goals: InvestmentGoalResponse[] = [];
   selectedGoalId: number | null = null;
   goal: InvestmentGoalResponse | null = null;
@@ -81,10 +105,113 @@ export class InvestmentPlan implements OnInit {
     this.userId =
       this.authService.getUserId() ?? 0;
 
-    this.loadPageData();
+    this.loadPlans();
   }
 
-  loadPageData(): void {
+  // ============ Plans list ============
+
+  loadPlans(): void {
+    if (this.userId <= 0) {
+      this.showToast('User session was not found.', true);
+      return;
+    }
+
+    this.plansLoading = true;
+
+    forkJoin({
+      plans: this.investmentPlanService.getPlanOverviewsByUserId(this.userId),
+      investments: this.portfolioService.getInvestmentsByUserId(this.userId)
+    })
+      .pipe(
+        finalize(() => {
+          this.plansLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: result => {
+          this.plans = result.plans ?? [];
+
+          this.investmentsByPlan = new Map();
+          for (const investment of result.investments ?? []) {
+            const existing = this.investmentsByPlan.get(investment.planId) ?? [];
+            existing.push(investment);
+            this.investmentsByPlan.set(investment.planId, existing);
+          }
+
+          this.cdr.detectChanges();
+        },
+        error: error => {
+          console.error('Failed to load investment plans:', error);
+          this.showToast(
+            error?.error?.message ?? 'Failed to load investment plans.',
+            true
+          );
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  planProgress(plan: InvestmentPlanOverview): number {
+    if (!plan.goalTargetAmount || plan.goalTargetAmount <= 0) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.min(((plan.goalCurrentAmount ?? 0) / plan.goalTargetAmount) * 100, 100)
+    );
+  }
+
+  statusVariant(status: string): StatusVariant {
+    return status?.toUpperCase() === 'ACTIVE' ? 'info' : 'neutral';
+  }
+
+  toggleDetails(planId: number): void {
+    this.expandedPlanId = this.expandedPlanId === planId ? null : planId;
+  }
+
+  investmentsForPlan(planId: number): InvestmentResponse[] {
+    return this.investmentsByPlan.get(planId) ?? [];
+  }
+
+  deletePlan(plan: InvestmentPlanOverview): void {
+    const confirmed = window.confirm(
+      `Delete "${plan.goalName ?? 'Plan #' + plan.planId}"? This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.investmentPlanService.deletePlan(plan.planId).subscribe({
+      next: () => {
+        this.plans = this.plans.filter(p => p.planId !== plan.planId);
+        this.showToast('Investment plan deleted.', false);
+        this.cdr.detectChanges();
+      },
+      error: error => {
+        this.showToast(
+          error?.error?.message ?? 'Failed to delete plan.',
+          true
+        );
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ============ Create form ============
+
+  startCreate(): void {
+    this.view = 'create';
+    this.loadCreateFormData();
+  }
+
+  cancelCreate(): void {
+    this.view = 'list';
+  }
+
+  loadCreateFormData(): void {
     if (this.userId <= 0) {
       this.showToast(
         'User session was not found.',
@@ -108,7 +235,7 @@ export class InvestmentPlan implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
-          this.cdr.detectChanges(); // 2. Ensure loading state clears in UI
+          this.cdr.detectChanges();
         })
       )
       .subscribe({
@@ -120,7 +247,7 @@ export class InvestmentPlan implements OnInit {
             this.selectGoal(this.goals[0].id);
           }
 
-          this.cdr.detectChanges(); // 3. Update view with loaded data
+          this.cdr.detectChanges();
         },
 
         error: error => {
@@ -157,7 +284,7 @@ export class InvestmentPlan implements OnInit {
 
     this.planType = 'MANUAL';
     this.aiExplanation = '';
-    
+
     this.cdr.detectChanges();
   }
 
@@ -260,7 +387,7 @@ export class InvestmentPlan implements OnInit {
       .pipe(
         finalize(() => {
           this.aiLoading = false;
-          this.cdr.detectChanges(); // 4. Clear AI loading state in view
+          this.cdr.detectChanges();
         })
       )
       .subscribe({
@@ -287,7 +414,7 @@ export class InvestmentPlan implements OnInit {
             false
           );
 
-          this.cdr.detectChanges(); // 5. Render updated AI allocations immediately
+          this.cdr.detectChanges();
         },
 
         error: error => {
@@ -380,7 +507,7 @@ export class InvestmentPlan implements OnInit {
       .pipe(
         finalize(() => {
           this.saving = false;
-          this.cdr.detectChanges(); // 6. Clear saving state in view
+          this.cdr.detectChanges();
         })
       )
       .subscribe({
@@ -395,6 +522,9 @@ export class InvestmentPlan implements OnInit {
             false
           );
 
+          this.view = 'list';
+          this.loadPlans();
+
           this.cdr.detectChanges();
         },
 
@@ -407,7 +537,7 @@ export class InvestmentPlan implements OnInit {
           this.showToast(
             error?.error?.message ??
             'Failed to save investment plan.',
-            false
+            true
           );
 
           this.cdr.detectChanges();
@@ -421,12 +551,12 @@ export class InvestmentPlan implements OnInit {
   ): void {
     this.toastMessage = message;
     this.toastIsError = isError;
-    this.cdr.detectChanges(); // 7. Guarantee toast displays instantly
+    this.cdr.detectChanges();
 
     window.setTimeout(() => {
       this.toastMessage = '';
       this.toastIsError = false;
-      this.cdr.detectChanges(); // 8. Update view when toast clears
+      this.cdr.detectChanges();
     }, 4000);
   }
 }

@@ -1,22 +1,22 @@
 :host {
-  --bg: #f5f7fb;
+  --bg: var(--gw-bg, #f6f8fa);
   --card-bg: #ffffff;
-  --border: #e6e9f0;
-  --text-primary: #1a1f36;
-  --text-secondary: #6b7280;
-  --accent: #4f46e5;
-  --accent-soft: #eef2ff;
-  --green: #16a34a;
-  --green-hover: #15803d;
+  --border: var(--gw-border, #e2e8f0);
+  --text-primary: var(--gw-ink, #0f172a);
+  --text-secondary: var(--gw-muted, #64748b);
+  --accent: var(--gw-primary, #146a4f);
+  --accent-soft: var(--gw-primary-soft, #e9f4ef);
+  --green: var(--gw-primary, #146a4f);
+  --green-hover: var(--gw-primary-dark, #0e4d39);
   --red: #dc2626;
-  --shadow: 0 2px 10px rgba(20, 22, 40, 0.06);
-  --shadow-hover: 0 6px 20px rgba(20, 22, 40, 0.10);
-  --radius: 16px;
+  --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  --shadow-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.12);
+  --radius: 18px;
 
   display: block;
   min-height: 100vh;
   background: var(--bg);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--gw-font, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
   color: var(--text-primary);
 }
 
@@ -278,11 +278,66 @@
 }
 
 .saved-goal-row {
-  background: #e4e4e4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface-soft, #fafbfc);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 14px 16px;
-  transition: box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.saved-goal-row:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+}
+
+.goal-status-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.goal-status-badge.achieved {
+  background: var(--gw-success-soft, #e8f8ef);
+  color: var(--gw-success, #16a34a);
+}
+
+.goal-status-badge.cancelled {
+  background: #fef2f2;
+  color: var(--red);
+}
+
+.btn-delete-goal {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--red);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-goal:hover:not(:disabled) {
+  background: var(--red);
+  color: #ffffff;
+}
+
+.btn-delete-goal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .saved-goal-row:hover {
@@ -310,7 +365,7 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.28);
+  box-shadow: 0 4px 14px rgba(20, 106, 79, 0.28);
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
@@ -371,4 +426,80 @@
   .achievement-card {
     padding: 18px;
   }
+}
+
+/* Range slider */
+.field-slider {
+  margin-top: 6px;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  appearance: none;
+  cursor: pointer;
+}
+
+.field-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(20, 106, 79, 0.4);
+}
+
+.field-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(20, 106, 79, 0.4);
+}
+
+/* Risk level toggle */
+.risk-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.risk-option {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafbfc;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.risk-option:hover {
+  border-color: var(--accent);
+}
+
+.risk-option.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Saved goal row: icon layout */
+.saved-goal-row {
+  align-items: flex-start;
+}
+
+.saved-goal-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.saved-goal-sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }

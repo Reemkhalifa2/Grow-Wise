@@ -65,7 +65,8 @@
                 <th>Type</th>
                 <th>Price</th>
                 <th>Currency</th>
-              
+                <th>Risk level</th>
+                <th class="actions-col">Catalog</th>
               </tr>
             </thead>
 
@@ -112,27 +113,36 @@
                     OMR
                   </td>
 
-                  <!-- <td>
-                    <button
-                      type="button"
-                      class="btn-add"
+                  <td>
+                    <select
+                      class="risk-select"
                       [disabled]="
                         isAdding(discoveredAsset.symbol) ||
                         isAdded(discoveredAsset.symbol)
                       "
-                      (click)="addToCatalog(discoveredAsset)"
+                      [ngModel]="riskFor(discoveredAsset.symbol)"
+                      (ngModelChange)="setRisk(discoveredAsset.symbol, $event)"
                     >
-                      @if (isAdding(discoveredAsset.symbol)) {
-                        Adding...
-                      } @else if (
-                        isAdded(discoveredAsset.symbol)
-                      ) {
-                        ✓ Added
-                      } @else {
-                        Add to catalog
+                      @for (level of riskLevels; track level) {
+                        <option [value]="level">{{ level }}</option>
                       }
-                    </button>
-                  </td> -->
+                    </select>
+                  </td>
+
+                  <td class="actions-col">
+                    @if (isAdded(discoveredAsset.symbol)) {
+                      <span class="catalog-status">✓ Added</span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-small btn-primary"
+                        [disabled]="isAdding(discoveredAsset.symbol)"
+                        (click)="addToCatalog(discoveredAsset)"
+                      >
+                        {{ isAdding(discoveredAsset.symbol) ? 'Adding...' : 'Add to catalog' }}
+                      </button>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>

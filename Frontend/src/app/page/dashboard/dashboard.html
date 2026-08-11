@@ -97,18 +97,37 @@
     <section class="panel">
       <div class="panel-header-row">
         <h2 class="panel-title">Portfolio performance</h2>
-        
+
+        <span
+          class="status-badge"
+          [class.status-healthy]="isProfit"
+          [class.status-down]="!isProfit"
+        >
+          {{ isProfit ? '+' : '' }}{{ returnPercentage }}% return
+        </span>
       </div>
 
       <div class="metrics-row">
         <div class="metric">
           <span class="metric-label">Invested amount</span>
-          <span class="metric-value">{{ stats.totalInvestmentAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="metric-value">{{ stats.totalInvestmentAmount | currency:'OMR':'code':'1.2-2' }}</span>
         </div>
 
-     
+        <div class="metric">
+          <span class="metric-label">Current value</span>
+          <span class="metric-value">{{ stats.totalCurrentValue | currency:'OMR':'code':'1.2-2' }}</span>
+        </div>
 
-       
+        <div class="metric">
+          <span class="metric-label">Total profit / loss</span>
+          <span
+            class="metric-value"
+            [class.metric-positive]="isProfit"
+            [class.metric-negative]="!isProfit"
+          >
+            {{ stats.totalProfit | currency:'OMR':'code':'1.2-2' }}
+          </span>
+        </div>
       </div>
 
       <div class="progress-track">
@@ -122,6 +141,31 @@
         <span>Current value vs. invested amount</span>
         <span>{{ currentValueBarWidth }}%</span>
       </div>
+    </section>
+
+    <!-- Activity breakdown -->
+    <section class="charts-grid">
+
+      <div class="panel chart-card">
+        <h2 class="panel-title">User activity</h2>
+
+        <app-allocation-chart
+          [slices]="userActivitySlices"
+          [centerValue]="stats.activeUsers + ''"
+          centerLabel="active users"
+        ></app-allocation-chart>
+      </div>
+
+      <div class="panel chart-card">
+        <h2 class="panel-title">Investment activity</h2>
+
+        <app-allocation-chart
+          [slices]="investmentActivitySlices"
+          [centerValue]="stats.activeInvestments + ''"
+          centerLabel="active investments"
+        ></app-allocation-chart>
+      </div>
+
     </section>
 
   }

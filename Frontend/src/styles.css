@@ -1,4 +1,74 @@
-/* You can add global styles to this file, and also import other style files */
+/* ============================================================
+   GlowWise — global design system
+   Every page-level component keeps its own scoped CSS, but reads
+   from this shared token set so color, radius, and shadow stay
+   consistent across the whole platform.
+   ============================================================ */
+
+:root {
+  /* Brand — emerald green fintech palette */
+  --gw-primary: #146a4f;
+  --gw-primary-bright: #1f9d74;
+  --gw-primary-dark: #0e4d39;
+  --gw-primary-darker: #0a3a2b;
+  --gw-primary-soft: #e9f4ef;
+  --gw-primary-soft-strong: rgba(20, 106, 79, 0.12);
+
+  /* Deep forest green — sidebar / hero surfaces */
+  --gw-navy: #06231b;
+  --gw-navy-light: #0f3d2e;
+  --gw-navy-soft: rgba(20, 106, 79, 0.16);
+
+  /* AI / premium accent, used sparingly (badges, emphasis) */
+  --gw-gold: #b8860b;
+  --gw-gold-soft: #fdf6e3;
+
+  /* Neutrals */
+  --gw-bg: #f5f8fc;
+  --gw-surface: #ffffff;
+  --gw-surface-soft: #f5f8fc;
+  --gw-border: #e3e9f4;
+  --gw-border-soft: #edf1f9;
+  --gw-ink: #0b1526;
+  --gw-muted: #64748b;
+  --gw-muted-soft: #94a3b8;
+
+  /* Status — reserved strictly for profit/loss/warning semantics */
+  --gw-success: #16a34a;
+  --gw-success-soft: #e8f8ef;
+  --gw-danger: #dc2626;
+  --gw-danger-soft: #fef2f2;
+  --gw-warning: #d97706;
+  --gw-warning-soft: #fef3c7;
+
+  /* Shape */
+  --gw-radius-sm: 10px;
+  --gw-radius-md: 14px;
+  --gw-radius-lg: 20px;
+  --gw-radius-full: 999px;
+
+  /* Elevation */
+  --gw-shadow-sm: 0 1px 2px rgba(7, 26, 64, 0.04);
+  --gw-shadow-md: 0 4px 20px -2px rgba(7, 26, 64, 0.07);
+  --gw-shadow-lg: 0 16px 32px -8px rgba(7, 26, 64, 0.14);
+
+  /* Type */
+  --gw-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --gw-font-display: 'Manrope', var(--gw-font);
+
+  /* Spec-named aliases — same tokens, canonical names for new code */
+  --primary: var(--gw-primary);
+  --primary-dark: var(--gw-primary-dark);
+  --primary-light: var(--gw-primary-soft);
+  --background: var(--gw-bg);
+  --surface: var(--gw-surface);
+  --text-primary: var(--gw-ink);
+  --text-secondary: var(--gw-muted);
+  --success: var(--gw-success);
+  --danger: var(--gw-danger);
+  --warning: var(--gw-warning);
+  --border: var(--gw-border);
+}
 
 /* The browser's default 8px body margin was never reset, so every page
    showed a thin white frame around its content — most visible on pages
@@ -9,10 +79,74 @@ body {
   padding: 0;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--gw-font);
+  color: var(--gw-ink);
+  background: var(--gw-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* app-root is a custom element with no built-in styling, so browsers
    default it to display:inline — that pushed its block-level page content
    down by a line-height's worth of space, showing as a white gap at the
    top of every page. */
 app-root {
   display: block;
+}
+
+a {
+  font-family: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Focus visibility, consistent everywhere */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--gw-primary);
+  outline-offset: 2px;
+}
+
+/* Slim, unobtrusive scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }

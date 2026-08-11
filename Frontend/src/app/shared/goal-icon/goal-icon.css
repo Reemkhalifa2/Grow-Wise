@@ -1,0 +1,10 @@
+:host {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e9f4ef;
+  color: #146a4f;
+  flex-shrink: 0;
+}

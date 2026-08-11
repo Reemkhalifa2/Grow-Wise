@@ -4,8 +4,8 @@
   --muted: #6b7280;
   --border: #e4e6ea;
   --border-strong: #1a2233;
-  --green: #16694f;
-  --green-hover: #12573f;
+  --green: #146a4f;
+  --green-hover: #0e4d39;
   --card-bg: #ffffff;
   --radius-lg: 20px;
   --radius-md: 12px;
@@ -119,7 +119,7 @@ body {
   margin-top: 4px;
   border: none;
   border-radius: var(--radius-md);
-  background-color: #16694f;
+  background-color: #146a4f;
   color: #ffffff;
   font-family: var(--font);
   font-size: 15px;
@@ -133,7 +133,7 @@ body {
 }
 
 .btn-submit:hover:not(:disabled) {
-  background-color: #12573f;
+  background-color: #0e4d39;
 }
 
 .btn-submit:active:not(:disabled) {

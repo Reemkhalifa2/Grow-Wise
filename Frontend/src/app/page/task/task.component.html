@@ -1,147 +1,111 @@
-<div class="task-container">
+<main class="task-page">
 
-  <div class="header">
-    <h2>My Tasks</h2>
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Action items</span>
+      <h1>To Do</h1>
+      <p>{{ pendingCount }} pending action{{ pendingCount === 1 ? '' : 's' }}</p>
+    </div>
 
-    <button class="add-btn" (click)="openModal()">
-      + Add Task
-    </button>
-  </div>
+    <button class="add-btn" (click)="openModal()">+ Add Task</button>
+  </header>
 
   <div class="search-box">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8" />
+      <path d="M20 20l-3.2-3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </svg>
+
     <input
       type="text"
       placeholder="Search tasks..."
+      [(ngModel)]="searchQuery"
     >
   </div>
 
   @if (loading) {
-    <p style="padding: 20px; color: #6b7684;">Loading tasks…</p>
-  } @else if (tasks.length === 0) {
-    <p style="padding: 20px; color: #6b7684;">No tasks yet. Add your first one above.</p>
+    <div class="state-card">Loading tasks…</div>
+  } @else if (filteredTasks.length === 0) {
+    <div class="state-card">
+      @if (tasks.length === 0) {
+        No tasks yet. Add your first one above.
+      } @else {
+        No tasks match your search.
+      }
+    </div>
   } @else {
-    <table>
+    <div class="task-list">
+      @for (task of filteredTasks; track task.id) {
+        <article class="task-row" [class.completed]="task.completed">
 
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Description</th>
-          <th>Due Date</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+          <button
+            type="button"
+            class="check-toggle"
+            [class.checked]="task.completed"
+            (click)="toggleStatus(task)"
+            [attr.aria-label]="task.completed ? 'Mark as pending' : 'Mark as complete'"
+          >
+            @if (task.completed) {
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            }
+          </button>
 
-      <tbody>
+          <div class="task-body">
+            <div class="task-title" [class.strikethrough]="task.completed">{{ task.title }}</div>
 
-        <tr *ngFor="let task of tasks">
+            @if (task.description) {
+              <div class="task-description">{{ task.description }}</div>
+            }
+          </div>
 
-          <td>{{task.title}}</td>
-
-          <td>{{task.description}}</td>
-
-          <td>{{task.dueDate}}</td>
-
-          <td>
-
-            <span
-              class="status"
-              [ngClass]="task.completed ? 'completed' : 'pending'"
-              (click)="toggleStatus(task)"
-              style="cursor: pointer;"
-              title="Click to toggle status">
-
-              {{task.completed ? 'Completed' : 'Pending'}}
-
+          @if (task.dueDate) {
+            <span class="due-date" [class.overdue]="isOverdue(task)">
+              {{ isOverdue(task) ? 'Overdue · ' : '' }}{{ task.dueDate | date:'mediumDate' }}
             </span>
+          }
 
-          </td>
-
-          <td>
-
-            <button
-              class="edit-btn"
-              (click)="editTask(task)">
-              Edit
+          <div class="task-actions">
+            <button class="icon-btn" (click)="editTask(task)" aria-label="Edit task">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
             </button>
 
-            <button
-              class="delete-btn"
-              (click)="deleteTask(task)">
-              Delete
+            <button class="icon-btn danger" (click)="deleteTask(task)" aria-label="Delete task">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </button>
+          </div>
 
-          </td>
-
-        </tr>
-
-      </tbody>
-
-    </table>
+        </article>
+      }
+    </div>
   }
 
-</div>
-
+</main>
 
 <!-- Modal -->
-
 <div class="modal" *ngIf="showModal">
-
   <div class="modal-content">
 
     <h2>{{ editingId ? 'Edit Task' : 'Add New Task' }}</h2>
 
     <div class="form-group">
-
       <label>Title</label>
-
-      <input
-      type="text"
-      [(ngModel)]="newTask.title">
-
+      <input type="text" [(ngModel)]="newTask.title" placeholder="e.g. Complete August contribution">
     </div>
 
     <div class="form-group">
-
       <label>Description</label>
-
-      <textarea
-      rows="4"
-      [(ngModel)]="newTask.description">
-      </textarea>
-
+      <textarea rows="3" [(ngModel)]="newTask.description" placeholder="Optional details"></textarea>
     </div>
 
     <div class="form-group">
-
       <label>Due Date</label>
-
-      <input
-      type="date"
-      [(ngModel)]="newTask.dueDate">
-
+      <input type="date" [(ngModel)]="newTask.dueDate">
     </div>
 
     <div class="modal-buttons">
-
-      <button
-      class="cancel-btn"
-      (click)="closeModal()">
-
-      Cancel
-
-      </button>
-
-      <button
-      class="save-btn"
-      (click)="saveTask()">
-
-      Save
-
-      </button>
-
+      <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+      <button class="save-btn" (click)="saveTask()">Save</button>
     </div>
 
   </div>
-
 </div>

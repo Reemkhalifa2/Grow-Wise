@@ -202,6 +202,16 @@
       autocomplete="off"
     />
 
+    <input
+      type="range"
+      class="field-slider"
+      min="0"
+      max="2000"
+      step="10"
+      [value]="goalForm.controls.monthlyContribution.value || 0"
+      (input)="goalForm.controls.monthlyContribution.setValue($any($event.target).value)"
+    />
+
     @if (
       goalForm.controls.monthlyContribution.touched &&
       goalForm.controls.monthlyContribution.invalid
@@ -210,6 +220,23 @@
         Enter a valid monthly contribution.
       </small>
     }
+  </div>
+
+  <div class="field">
+    <label>Risk level</label>
+
+    <div class="risk-toggle">
+      @for (level of riskLevels; track level) {
+        <button
+          type="button"
+          class="risk-option"
+          [class.active]="goalForm.controls.riskLevel.value === level"
+          (click)="setRiskLevel(level)"
+        >
+          {{ level }}
+        </button>
+      }
+    </div>
   </div>
 
 </section>
@@ -493,6 +520,8 @@
         ) {
           <div class="saved-goal-row">
 
+            <app-goal-icon [icon]="goalIcon(goal)"></app-goal-icon>
+
             <div class="saved-goal-content">
 
               <div class="saved-goal-target">
@@ -516,12 +545,39 @@
                     | number:'1.0-1'
                 }}%
 
-                · {{ goal.status }}
+                <span
+                  class="goal-status-badge"
+                  [class.achieved]="goal.status === 'ACHIEVED'"
+                  [class.cancelled]="goal.status === 'CANCELLED'"
+                >
+                  {{ goal.status }}
+                </span>
+
+                @if (goalStatus(goal); as computedStatus) {
+                  <app-status-badge
+                    [label]="computedStatus.label"
+                    [variant]="statusVariant(computedStatus.status)"
+                  ></app-status-badge>
+                }
               </div>
 
             </div>
 
-          
+            <button
+              type="button"
+              class="btn-delete-goal"
+              [disabled]="
+                deletingGoalId === goal.id
+              "
+              (click)="deleteGoal(goal)"
+            >
+              {{
+                deletingGoalId === goal.id
+                  ? 'Deleting...'
+                  : 'Delete'
+              }}
+            </button>
+
           </div>
         }
 

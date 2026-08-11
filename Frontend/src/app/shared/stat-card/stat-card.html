@@ -1,0 +1,21 @@
+<article class="stat-card">
+  <div class="stat-top">
+    <span class="stat-label">{{ label }}</span>
+
+    <span class="stat-icon">
+      <ng-content select="[icon]"></ng-content>
+    </span>
+  </div>
+
+  <div class="stat-value">{{ value }}</div>
+
+  @if (footnote) {
+    <div
+      class="stat-footnote"
+      [class.positive]="footnoteTone === true"
+      [class.negative]="footnoteTone === false"
+    >
+      {{ footnote }}
+    </div>
+  }
+</article>

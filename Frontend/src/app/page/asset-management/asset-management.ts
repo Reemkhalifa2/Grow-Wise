@@ -5,6 +5,7 @@ import {
   inject,
   OnInit
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { AssetService } from '../../services/assets';
@@ -17,7 +18,8 @@ import {
   selector: 'app-asset-management',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    FormsModule
   ],
   templateUrl: './asset-management.html',
   styleUrl: './asset-management.css'
@@ -33,6 +35,9 @@ export class AssetManagement implements OnInit {
 
   addingSymbols = new Set<string>();
   addedSymbols = new Set<string>();
+  riskSelections = new Map<string, RiskLevel>();
+
+  readonly riskLevels: RiskLevel[] = ['LOW', 'MEDIUM', 'HIGH'];
 
   toastMessage = '';
   toastIsError = false;
@@ -74,9 +79,16 @@ export class AssetManagement implements OnInit {
       });
   }
 
+  riskFor(symbol: string): RiskLevel {
+    return this.riskSelections.get(symbol) ?? 'MEDIUM';
+  }
+
+  setRisk(symbol: string, riskLevel: RiskLevel): void {
+    this.riskSelections.set(symbol, riskLevel);
+  }
+
   addToCatalog(
-    asset: MarketDiscovery,
-    riskLevel: RiskLevel = 'MEDIUM'
+    asset: MarketDiscovery
   ): void {
 
     if (
@@ -90,7 +102,7 @@ export class AssetManagement implements OnInit {
     this.cdr.detectChanges(); // 4. Instantly reflect loading state on button click
 
     this.assetService
-      .addToCatalog(asset, riskLevel)
+      .addToCatalog(asset, this.riskFor(asset.symbol))
       .pipe(
         finalize(() => {
           this.addingSymbols.delete(asset.symbol);

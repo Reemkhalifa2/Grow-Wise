@@ -1,0 +1,33 @@
+<svg
+  [attr.width]="size"
+  [attr.height]="size"
+  [attr.viewBox]="'0 0 ' + size + ' ' + size"
+  class="ring-svg"
+>
+  <circle
+    [attr.cx]="center"
+    [attr.cy]="center"
+    [attr.r]="radius"
+    fill="none"
+    stroke="#e9f4ef"
+    [attr.stroke-width]="strokeWidth"
+  />
+
+  <circle
+    [attr.cx]="center"
+    [attr.cy]="center"
+    [attr.r]="radius"
+    fill="none"
+    stroke="#146a4f"
+    stroke-linecap="round"
+    [attr.stroke-width]="strokeWidth"
+    [attr.stroke-dasharray]="circumference"
+    [attr.stroke-dashoffset]="dashOffset"
+    class="ring-progress"
+    [attr.transform]="'rotate(-90 ' + center + ' ' + center + ')'"
+  />
+</svg>
+
+<div class="ring-label">
+  <strong>{{ clamped | number:'1.0-0' }}%</strong>
+</div>
