@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,20 +41,26 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
             Integer userId,
             Integer planId
     );
+    /*
+     * Filters on purchaseDate, not createdDate — createdDate is a BaseEntity
+     * auditing field that nothing in this project ever populates, so a
+     * filter on it would silently match zero rows and this check would
+     * never actually block a duplicate monthly investment.
+     */
     @Query("""
        SELECT COALESCE(SUM(i.amountInvested), 0)
        FROM Investment i
        WHERE i.user.id = :userId
        AND i.investmentPlan.id = :planId
        AND i.isActive = true
-       AND i.createdDate >= :startDate
-       AND i.createdDate < :endDate
+       AND i.purchaseDate >= :startDate
+       AND i.purchaseDate < :endDate
        """)
     Double sumMonthlyInvestmentByUserAndPlan(
             @Param("userId") Integer userId,
             @Param("planId") Integer planId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     @Query("SELECT i FROM Investment i " + "WHERE i.user.id = :userId AND i.isActive = true")
@@ -81,7 +87,7 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
     @Query("""
            SELECT COALESCE(
                SUM(
-                   COALESCE(i.quantity, 0)
+                   COALESCE(i.unitsPurchased, 0)
                    * COALESCE(i.asset.currentPrice, 0)
                ),
                0
@@ -95,7 +101,7 @@ public interface InvestmentRepository extends JpaRepository<Investment, Integer>
            SELECT COALESCE(
                SUM(
                    (
-                       COALESCE(i.quantity, 0)
+                       COALESCE(i.unitsPurchased, 0)
                        * COALESCE(i.asset.currentPrice, 0)
                    )
                    - COALESCE(i.amountInvested, 0)

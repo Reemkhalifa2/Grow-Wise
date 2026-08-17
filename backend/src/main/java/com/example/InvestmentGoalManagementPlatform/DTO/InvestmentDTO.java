@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvestmentDTO {
+
+    private static final int UNITS_SCALE = 6;
+    private static final int MONEY_SCALE = 3;
+    private static final int PERCENT_SCALE = 2;
 
     private Integer id;
 
@@ -52,6 +58,19 @@ public class InvestmentDTO {
 
     private Double currentValue;
     private Double profitOrLoss;
+    private Double returnPercentage;
+
+    /** amountInvested / purchasePrice at the time this investment was made. */
+    private Double unitsPurchased;
+
+    /** The asset's latest price, exposed alongside currentValue for context. */
+    private Double currentPrice;
+
+    /** Whether investmentPlan has already met its required amount this month. */
+    private Boolean monthlyInvestmentCompleted;
+
+    /** e.g. "September 2026" — the month a new contribution would count toward. */
+    private String nextInvestmentMonth;
 
     public Investment toEntity() {
         Investment investment = new Investment();
@@ -116,6 +135,11 @@ public class InvestmentDTO {
         Asset asset =
                 investment.getAsset();
 
+        BigDecimal investedAmount =
+                BigDecimal.valueOf(
+                        safeDouble(investment.getAmountInvested())
+                );
+
         if (asset != null) {
             dto.setAssetId(asset.getId());
             dto.setAssetName(asset.getName());
@@ -133,40 +157,115 @@ public class InvestmentDTO {
                             : asset.getRiskLevel().name()
             );
 
-            double quantity =
-                    investment.getQuantity() == null
-                            ? 1.0
-                            : investment.getQuantity();
+            dto.setCurrentPrice(asset.getCurrentPrice());
 
-            double currentPrice =
-                    asset.getCurrentPrice() == null
-                            ? 0.0
-                            : asset.getCurrentPrice();
+            // Units are the source of truth for value, never the asset's
+            // raw price — that's what let a 7300-point MSM30 index level
+            // get displayed as if it were a 7300 OMR portfolio balance.
+            BigDecimal units = resolveUnits(investment);
 
-            double currentValue =
-                    currentPrice * quantity;
-
-            dto.setCurrentValue(currentValue);
-
-            double investedAmount =
-                    investment.getAmountInvested() == null
-                            ? 0.0
-                            : investment.getAmountInvested();
-
-            dto.setProfitOrLoss(
-                    currentValue - investedAmount
+            dto.setUnitsPurchased(
+                    units == null ? null : units.doubleValue()
             );
+
+            BigDecimal currentValue =
+                    calculateCurrentValue(
+                            units,
+                            asset.getCurrentPrice()
+                    );
+
+            if (currentValue != null) {
+                BigDecimal profitLoss =
+                        currentValue
+                                .subtract(investedAmount)
+                                .setScale(
+                                        MONEY_SCALE,
+                                        RoundingMode.HALF_UP
+                                );
+
+                dto.setCurrentValue(currentValue.doubleValue());
+                dto.setProfitOrLoss(profitLoss.doubleValue());
+
+                dto.setReturnPercentage(
+                        calculateReturnPercentage(
+                                profitLoss,
+                                investedAmount
+                        )
+                );
+            } else {
+                // No purchase price is on record at all. Every creation
+                // path now sets one, so this should only happen for rows
+                // predating this fix — report the amount invested rather
+                // than fabricate a value from an unrelated price.
+                dto.setCurrentValue(investedAmount.doubleValue());
+                dto.setProfitOrLoss(0.0);
+                dto.setReturnPercentage(0.0);
+            }
         } else {
             dto.setCurrentValue(0.0);
-
-            dto.setProfitOrLoss(
-                    -safeDouble(
-                            investment.getAmountInvested()
-                    )
-            );
+            dto.setProfitOrLoss(-investedAmount.doubleValue());
         }
 
         return dto;
+    }
+
+    /**
+     * Prefers the stored unitsPurchased. Falls back to deriving it from
+     * amountInvested/purchasePrice for investments created before that
+     * column existed, so old records don't silently show as unpriced.
+     */
+    private static BigDecimal resolveUnits(
+            Investment investment
+    ) {
+        if (investment.getUnitsPurchased() != null) {
+            return investment.getUnitsPurchased();
+        }
+
+        Double amountInvested = investment.getAmountInvested();
+        Double purchasePrice = investment.getPurchasePrice();
+
+        if (
+                amountInvested == null ||
+                        purchasePrice == null ||
+                        purchasePrice <= 0
+        ) {
+            return null;
+        }
+
+        return BigDecimal.valueOf(amountInvested)
+                .divide(
+                        BigDecimal.valueOf(purchasePrice),
+                        UNITS_SCALE,
+                        RoundingMode.HALF_UP
+                );
+    }
+
+    private static BigDecimal calculateCurrentValue(
+            BigDecimal units,
+            Double currentPrice
+    ) {
+        if (units == null || currentPrice == null) {
+            return null;
+        }
+
+        return units
+                .multiply(BigDecimal.valueOf(currentPrice))
+                .setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private static Double calculateReturnPercentage(
+            BigDecimal profitLoss,
+            BigDecimal investedAmount
+    ) {
+        if (investedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+
+        return profitLoss
+                .divide(investedAmount, 6, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(PERCENT_SCALE, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     public static List<InvestmentDTO> fromEntity(

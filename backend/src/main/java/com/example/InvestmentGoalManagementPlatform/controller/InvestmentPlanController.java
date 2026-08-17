@@ -1,13 +1,16 @@
 package com.example.InvestmentGoalManagementPlatform.controller;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.AiAllocationSuggestionDTO;
+import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanOverviewDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanRequestDTO;
-import com.example.InvestmentGoalManagementPlatform.entity.InvestmentPlan;
+import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanSummaryDTO;
 import com.example.InvestmentGoalManagementPlatform.service.InvestmentPlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/investment-plans")
@@ -18,10 +21,10 @@ public class InvestmentPlanController {
     private final InvestmentPlanService investmentPlanService;
 
     @PostMapping
-    public ResponseEntity<InvestmentPlan> createPlan(
+    public ResponseEntity<InvestmentPlanSummaryDTO> createPlan(
             @RequestBody InvestmentPlanRequestDTO request
     ) {
-        InvestmentPlan createdPlan =
+        InvestmentPlanSummaryDTO createdPlan =
                 investmentPlanService.createPlan(request);
 
         return ResponseEntity
@@ -40,5 +43,22 @@ public class InvestmentPlanController {
                         monthlyInvestmentAmount
                 )
         );
-    } 
+    }
+
+    @DeleteMapping("/{planId}")
+    public ResponseEntity<Void> deletePlan(
+            @PathVariable Integer planId
+    ) {
+        investmentPlanService.deletePlan(planId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<InvestmentPlanOverviewDTO>> getPlanOverviewsByUserId(
+            @PathVariable Integer userId
+    ) {
+        return ResponseEntity.ok(
+                investmentPlanService.getPlanOverviewsByUserId(userId)
+        );
+    }
 }

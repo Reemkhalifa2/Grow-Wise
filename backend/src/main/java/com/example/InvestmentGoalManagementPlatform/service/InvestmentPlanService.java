@@ -1,7 +1,10 @@
 package com.example.InvestmentGoalManagementPlatform.service;
 
 import com.example.InvestmentGoalManagementPlatform.DTO.AiAllocationSuggestionDTO;
+import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentDTO;
+import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanOverviewDTO;
 import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanRequestDTO;
+import com.example.InvestmentGoalManagementPlatform.DTO.InvestmentPlanSummaryDTO;
 import com.example.InvestmentGoalManagementPlatform.entity.Asset;
 import com.example.InvestmentGoalManagementPlatform.entity.FinancialGoal;
 import com.example.InvestmentGoalManagementPlatform.entity.InvestmentPlan;
@@ -48,7 +51,7 @@ public class InvestmentPlanService {
     }
 
     @Transactional
-    public InvestmentPlan createPlan(
+    public InvestmentPlanSummaryDTO createPlan(
             InvestmentPlanRequestDTO dto
     ) {
 
@@ -114,11 +117,11 @@ public class InvestmentPlanService {
             );
         }
 
-        return savedPlan;
-
-
-
-
+        return new InvestmentPlanSummaryDTO(
+                savedPlan.getId(),
+                savedPlan.getMonthlyInvestmentAmount(),
+                savedPlan.getStatus()
+        );
     }
 
     private void validateRequest(
@@ -295,6 +298,89 @@ public class InvestmentPlanService {
 
         return investmentPlanRepository
                 .findByUser(user);
+    }
+
+    /**
+     * Slim, goal-aware summary for list screens (dashboard, investment
+     * plans page, portfolio page). The linked FinancialGoal's name is what
+     * actually identifies a plan to the user, so it's surfaced directly
+     * here instead of forcing the frontend to join plan + goal itself.
+     */
+    @Transactional(readOnly = true)
+    public List<InvestmentPlanOverviewDTO> getPlanOverviewsByUserId(
+            Integer userId
+    ) {
+        return investmentPlanRepository
+                .findByUserIdAndIsActiveTrueOrderByCreatedDateDesc(userId)
+                .stream()
+                .map(this::mapToOverview)
+                .toList();
+    }
+
+    private InvestmentPlanOverviewDTO mapToOverview(
+            InvestmentPlan plan
+    ) {
+        List<InvestmentDTO> investments =
+                investmentService.getInvestmentsByPlanId(plan.getId());
+
+        double totalInvested = investments.stream()
+                .mapToDouble(i -> i.getAmountInvested() == null ? 0.0 : i.getAmountInvested())
+                .sum();
+
+        double currentValue = investments.stream()
+                .mapToDouble(i -> i.getCurrentValue() == null ? 0.0 : i.getCurrentValue())
+                .sum();
+
+        double profitLoss = currentValue - totalInvested;
+
+        Double returnPercentage = totalInvested > 0
+                ? (profitLoss / totalInvested) * 100
+                : null;
+
+        InvestmentService.MonthlyStatus monthlyStatus =
+                investmentService.getMonthlyStatusForPlan(plan);
+
+        FinancialGoal goal = plan.getFinancialGoal();
+
+        return InvestmentPlanOverviewDTO.builder()
+                .planId(plan.getId())
+                .status(plan.getStatus())
+                .monthlyInvestmentAmount(plan.getMonthlyInvestmentAmount())
+                .totalInvested(round(totalInvested))
+                .currentValue(round(currentValue))
+                .profitLoss(round(profitLoss))
+                .returnPercentage(returnPercentage == null ? null : round(returnPercentage))
+                .monthlyInvestmentCompleted(monthlyStatus.completed())
+                .nextInvestmentMonth(monthlyStatus.nextInvestmentMonthLabel())
+                .goalId(goal == null ? null : goal.getId())
+                .goalName(goal == null ? null : goal.getGoalName())
+                .goalTargetAmount(goal == null ? null : goal.getTargetAmount())
+                .goalCurrentAmount(goal == null ? null : goal.getCurrentAmount())
+                .goalTargetDate(goal == null ? null : goal.getTargetDate())
+                .build();
+    }
+
+    private double round(double value) {
+        return Math.round(value * 1000.0) / 1000.0;
+    }
+
+    // Soft delete: deactivates the plan instead of removing the row
+    public void deletePlan(
+            Integer planId
+    ) {
+        InvestmentPlan plan = investmentPlanRepository
+                .findById(planId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Investment plan not found with ID: "
+                                        + planId
+                        )
+                );
+
+        plan.setIsActive(false);
+        investmentPlanRepository.save(plan);
+
+        investmentService.deactivateInvestmentsByPlanId(planId);
     }
 
     private Map<Integer, Double> parseAiAllocations(
