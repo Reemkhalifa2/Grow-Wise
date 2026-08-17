@@ -11,19 +11,42 @@ import com.example.InvestmentGoalManagementPlatform.utility.HelperUtility;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Service
 public class InvestmentService {
+
+    // Fractional units need more precision than money does, e.g. 100/52
+    // OMR must keep enough digits that repeated monthly purchases don't
+    // drift when summed back up.
+    private static final int UNITS_SCALE = 6;
+
+    private static final DateTimeFormatter MONTH_LABEL_FORMAT =
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
 
     private final InvestmentRepository investmentRepository;
     private final UserRepository userRepository;
     private final InvestmentPlanRepository investmentPlanRepository;
     private final AssetRepository assetRepository;
     private final StreakService streakService;
+
+    /**
+     * Whether a plan's required monthly amount has already been invested
+     * for the current calendar month, and the month a new contribution
+     * would count toward.
+     */
+    public record MonthlyStatus(
+            boolean completed,
+            String nextInvestmentMonthLabel
+    ) {}
 
     public InvestmentService(
             InvestmentRepository investmentRepository,
@@ -82,34 +105,7 @@ public class InvestmentService {
         }
 
 
-        YearMonth currentMonth =
-                YearMonth.now();
-
-        LocalDateTime startOfCurrentMonth =
-                currentMonth
-                        .atDay(1)
-                        .atStartOfDay();
-
-        LocalDateTime startOfNextMonth =
-                currentMonth
-                        .plusMonths(1)
-                        .atDay(1)
-                        .atStartOfDay();
-
-        Double alreadyInvested =
-                investmentRepository
-                        .sumMonthlyInvestmentByUserAndPlan(
-                                userId,
-                                planId,
-                                startOfCurrentMonth,
-                                startOfNextMonth
-                        );
-
-        if (
-                alreadyInvested != null &&
-                        alreadyInvested >=
-                                plan.getMonthlyInvestmentAmount()
-        ) {
+        if (computeMonthlyStatus(plan).completed()) {
             throw new IllegalArgumentException(
                     "This month's investment is already completed"
             );
@@ -124,20 +120,29 @@ public class InvestmentService {
                             * allocation.getAllocationPercentage()
                             / 100.0;
 
+            Asset asset = allocation.getAsset();
+
             Investment investment =
                     new Investment();
 
             investment.setUser(user);
             investment.setInvestmentPlan(plan);
-            investment.setAsset(
-                    allocation.getAsset()
-            );
+            investment.setAsset(asset);
             investment.setAmountInvested(
                     monthlyAmount
             );
             investment.setPurchaseDate(
                     LocalDate.now()
             );
+
+            // Freeze this month's price so past purchases are never
+            // re-priced using a later, unrelated asset price.
+            Double priceAtPurchase = asset.getCurrentPrice();
+            investment.setPurchasePrice(priceAtPurchase);
+            investment.setUnitsPurchased(
+                    calculateUnits(monthlyAmount, priceAtPurchase)
+            );
+
             investment.setIsActive(true);
 
             investmentRepository.save(investment);
@@ -167,6 +172,12 @@ public class InvestmentService {
         investment.setIsActive(true);
         investment.setPurchaseDate(
                 LocalDate.now()
+        );
+
+        Double priceAtPurchase = asset.getCurrentPrice();
+        investment.setPurchasePrice(priceAtPurchase);
+        investment.setUnitsPurchased(
+                calculateUnits(monthlyAmount, priceAtPurchase)
         );
 
         return investmentRepository.save(investment);
@@ -256,6 +267,15 @@ public class InvestmentService {
         investment.setAsset(asset);
         investment.setIsActive(true);
 
+        // Units are always derived from the recorded purchase price rather
+        // than trusted from the client, so the two can never drift apart.
+        investment.setUnitsPurchased(
+                calculateUnits(
+                        investment.getAmountInvested(),
+                        investment.getPurchasePrice()
+                )
+        );
+
         Investment savedInvestment =
                 investmentRepository.save(investment);
 
@@ -274,9 +294,9 @@ public class InvestmentService {
                 investmentPlan
         );
 
-        return InvestmentDTO.fromEntity(
-                savedInvestment
-        );
+        return mapWithMonthlyStatus(
+                List.of(savedInvestment)
+        ).get(0);
     }
 
     @Transactional(readOnly = true)
@@ -295,14 +315,15 @@ public class InvestmentService {
                                 )
                         );
 
-        return InvestmentDTO.fromEntity(investment);
+        return mapWithMonthlyStatus(List.of(investment))
+                .get(0);
     }
 
     @Transactional(readOnly = true)
     public List<InvestmentDTO> getInvestmentsByUserId(
             Integer userId
     ) {
-        return InvestmentDTO.fromEntity(
+        return mapWithMonthlyStatus(
                 investmentRepository
                         .findByUserIdAndIsActiveTrue(
                                 userId
@@ -314,7 +335,7 @@ public class InvestmentService {
     public List<InvestmentDTO> getInvestmentsByPlanId(
             Integer planId
     ) {
-        return InvestmentDTO.fromEntity(
+        return mapWithMonthlyStatus(
                 investmentRepository
                         .findByInvestmentPlanIdAndIsActiveTrue(
                                 planId
@@ -322,11 +343,23 @@ public class InvestmentService {
         );
     }
 
+    /**
+     * Exposes the same monthly-completion check used when mapping
+     * investments, for callers (e.g. plan summary screens) that need it
+     * for a plan that may not have any investments yet.
+     */
+    @Transactional(readOnly = true)
+    public MonthlyStatus getMonthlyStatusForPlan(
+            InvestmentPlan plan
+    ) {
+        return computeMonthlyStatus(plan);
+    }
+
     @Transactional(readOnly = true)
     public List<InvestmentDTO> getInvestmentsByAssetId(
             Integer assetId
     ) {
-        return InvestmentDTO.fromEntity(
+        return mapWithMonthlyStatus(
                 investmentRepository
                         .findByAssetIdAndIsActiveTrue(
                                 assetId
@@ -340,7 +373,7 @@ public class InvestmentService {
             Integer userId,
             Integer planId
     ) {
-        return InvestmentDTO.fromEntity(
+        return mapWithMonthlyStatus(
                 investmentRepository
                         .findByUserIdAndInvestmentPlanIdAndIsActiveTrue(
                                 userId,
@@ -367,6 +400,13 @@ public class InvestmentService {
                         );
 
         dto.applyTo(investment);
+
+        investment.setUnitsPurchased(
+                calculateUnits(
+                        investment.getAmountInvested(),
+                        investment.getPurchasePrice()
+                )
+        );
 
         if (dto.getId() != null) {
             Asset asset =
@@ -433,9 +473,9 @@ public class InvestmentService {
                 updatedInvestment.getInvestmentPlan()
         );
 
-        return InvestmentDTO.fromEntity(
-                updatedInvestment
-        );
+        return mapWithMonthlyStatus(
+                List.of(updatedInvestment)
+        ).get(0);
     }
 
     @Transactional
@@ -457,5 +497,144 @@ public class InvestmentService {
         investment.setIsActive(false);
 
         investmentRepository.save(investment);
+    }
+
+    /**
+     * Deactivates every active investment under a plan. Called when a plan
+     * is soft-deleted so its investments stop being returned by the
+     * user/investment listing queries — otherwise a deleted plan would be
+     * rebuilt right back on the client from investments that are still active.
+     */
+    @Transactional
+    public void deactivateInvestmentsByPlanId(
+            Integer planId
+    ) {
+        List<Investment> investments =
+                investmentRepository
+                        .findByInvestmentPlanIdAndIsActiveTrue(
+                                planId
+                        );
+
+        for (Investment investment : investments) {
+            investment.setIsActive(false);
+        }
+
+        investmentRepository.saveAll(investments);
+    }
+
+    /**
+     * amountInvested / purchasePrice, rounded for storage. Returns null
+     * when either input is missing so callers can tell "not priced yet"
+     * apart from a genuine zero.
+     */
+    private BigDecimal calculateUnits(
+            Double amountInvested,
+            Double purchasePrice
+    ) {
+        if (
+                amountInvested == null ||
+                        purchasePrice == null ||
+                        purchasePrice <= 0
+        ) {
+            return null;
+        }
+
+        return BigDecimal.valueOf(amountInvested)
+                .divide(
+                        BigDecimal.valueOf(purchasePrice),
+                        UNITS_SCALE,
+                        RoundingMode.HALF_UP
+                );
+    }
+
+    /**
+     * Reuses the same "amount invested this calendar month" query that
+     * completeMonthlyInvestment() enforces, so a plan can never be reported
+     * as completed here while still accepting another contribution there.
+     */
+    private MonthlyStatus computeMonthlyStatus(
+            InvestmentPlan plan
+    ) {
+        if (
+                plan == null ||
+                        plan.getUser() == null ||
+                        plan.getMonthlyInvestmentAmount() == null ||
+                        plan.getMonthlyInvestmentAmount() <= 0
+        ) {
+            return new MonthlyStatus(false, null);
+        }
+
+        YearMonth currentMonth = YearMonth.now();
+
+        Double investedThisMonth =
+                investmentRepository
+                        .sumMonthlyInvestmentByUserAndPlan(
+                                plan.getUser().getId(),
+                                plan.getId(),
+                                currentMonth.atDay(1),
+                                currentMonth.plusMonths(1).atDay(1)
+                        );
+
+        boolean completed =
+                investedThisMonth != null &&
+                        investedThisMonth >=
+                                plan.getMonthlyInvestmentAmount();
+
+        YearMonth nextInvestmentMonth =
+                completed
+                        ? currentMonth.plusMonths(1)
+                        : currentMonth;
+
+        return new MonthlyStatus(
+                completed,
+                nextInvestmentMonth.format(MONTH_LABEL_FORMAT)
+        );
+    }
+
+    /**
+     * Maps investments to DTOs and stamps each one with its plan's monthly
+     * completion status, computing that status once per distinct plan
+     * rather than once per investment record.
+     */
+    private List<InvestmentDTO> mapWithMonthlyStatus(
+            List<Investment> investments
+    ) {
+        List<InvestmentDTO> dtos =
+                InvestmentDTO.fromEntity(investments);
+
+        applyMonthlyStatus(investments, dtos);
+
+        return dtos;
+    }
+
+    private void applyMonthlyStatus(
+            List<Investment> investments,
+            List<InvestmentDTO> dtos
+    ) {
+        Map<Integer, MonthlyStatus> statusByPlanId =
+                new HashMap<>();
+
+        for (int i = 0; i < investments.size(); i++) {
+            InvestmentPlan plan =
+                    investments.get(i).getInvestmentPlan();
+
+            if (plan == null || plan.getId() == null) {
+                continue;
+            }
+
+            MonthlyStatus status =
+                    statusByPlanId.computeIfAbsent(
+                            plan.getId(),
+                            id -> computeMonthlyStatus(plan)
+                    );
+
+            dtos.get(i).setMonthlyInvestmentCompleted(
+                    status.completed()
+            );
+
+            dtos.get(i).setNextInvestmentMonth(
+                    status.nextInvestmentMonthLabel()
+            );
+        }
     }
 }

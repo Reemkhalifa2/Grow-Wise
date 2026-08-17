@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 
 @Service
@@ -66,24 +65,13 @@ public class StreakService {
 
         YearMonth currentMonth = YearMonth.now();
 
-        LocalDateTime startOfCurrentMonth =
-                currentMonth
-                        .atDay(1)
-                        .atStartOfDay();
-
-        LocalDateTime startOfNextMonth =
-                currentMonth
-                        .plusMonths(1)
-                        .atDay(1)
-                        .atStartOfDay();
-
         Double investedThisMonth =
                 investmentRepository
                         .sumMonthlyInvestmentByUserAndPlan(
                                 user.getId(),
                                 investmentPlan.getId(),
-                                startOfCurrentMonth,
-                                startOfNextMonth
+                                currentMonth.atDay(1),
+                                currentMonth.plusMonths(1).atDay(1)
                         );
 
         double totalInvestedThisMonth =
